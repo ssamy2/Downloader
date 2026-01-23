@@ -121,11 +121,74 @@ class MediaDownloader:
     
     async def _download_instagram_scraper(self, url: str, quality: str,
                                           progress_callback=None, download_audio: bool = False) -> DownloadResult:
-        """Download Instagram video using yt-dlp with optimized settings"""
+        """Download Instagram video using GraphQL API"""
         try:
-            # Instagram works better with yt-dlp directly
-            # The scraper approach is too unreliable due to Cloudflare protection
-            return await self._download_with_ytdlp(url, quality, 'instagram', progress_callback, download_audio)
+            import requests
+            
+            if progress_callback:
+                await progress_callback("connecting", 10)
+            
+            # Extract post ID
+            post_id = self._extract_instagram_post_id(url)
+            if not post_id:
+                raise Exception("Could not extract post ID from URL")
+            
+            # Try GraphQL API first
+            video_data = await self._get_instagram_graphql(post_id)
+            
+            if not video_data:
+                # Fallback to webpage scraping
+                video_data = await self._get_instagram_webpage(post_id)
+            
+            if not video_data or not video_data.get('video_url'):
+                raise Exception("Could not extract video URL")
+            
+            video_url = video_data['video_url']
+            
+            if progress_callback:
+                await progress_callback("downloading", 30)
+            
+            # Download video
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.get(video_url, timeout=60, stream=True)
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"Failed to download: HTTP {response.status_code}")
+            
+            # Save file
+            ext = "mp3" if download_audio else "mp4"
+            filename = self._generate_filename(url, ext)
+            file_path = os.path.join(self.download_dir, filename)
+            
+            with open(file_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            
+            file_size = os.path.getsize(file_path)
+            
+            # Convert to audio if requested
+            if download_audio:
+                audio_path = await self._extract_audio(file_path)
+                if audio_path:
+                    os.remove(file_path)
+                    file_path = audio_path
+                    file_size = os.path.getsize(file_path)
+            
+            if progress_callback:
+                await progress_callback("downloaded", 90)
+            
+            return DownloadResult(
+                success=True,
+                file_path=file_path,
+                file_size=file_size,
+                platform='instagram',
+                title='',
+                thumbnail=video_data.get('thumbnail')
+            )
             
         except Exception as e:
             logger.error(f"Instagram download error: {e}")
@@ -523,6 +586,134 @@ class MediaDownloader:
         except Exception as e:
             logger.error(f"Conversion error: {e}")
             return False
+    
+    def _extract_instagram_post_id(self, url: str) -> Optional[str]:
+        """Extract post ID from Instagram URL"""
+        patterns = [
+            r'/p/([a-zA-Z0-9_-]+)',
+            r'/reel/([a-zA-Z0-9_-]+)',
+            r'/reels/([a-zA-Z0-9_-]+)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
+        
+        return None
+    
+    async def _get_instagram_graphql(self, post_id: str) -> Optional[Dict[str, str]]:
+        """Get Instagram video using GraphQL API"""
+        try:
+            import requests
+            
+            variables = {
+                "shortcode": post_id,
+                "fetch_comment_count": None,
+                "fetch_related_profile_media_count": None,
+                "parent_comment_count": None,
+                "child_comment_count": None,
+                "fetch_like_count": None,
+                "fetch_tagged_user_count": None,
+                "fetch_preview_comment_count": None,
+                "has_threaded_comments": False,
+                "hoisted_comment_id": None,
+                "hoisted_reply_id": None,
+            }
+            
+            payload = {
+                "av": "0",
+                "__d": "www",
+                "__user": "0",
+                "__a": "1",
+                "__req": "3",
+                "dpr": "3",
+                "lsd": "AVqbxe3J_YA",
+                "fb_api_caller_class": "RelayModern",
+                "fb_api_req_friendly_name": "PolarisPostActionLoadPostQueryQuery",
+                "variables": json.dumps(variables),
+                "server_timestamps": "true",
+                "doc_id": "10015901848480474",
+            }
+            
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-IG-App-ID': '1217981644879628',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36',
+            }
+            
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.post(
+                    'https://www.instagram.com/api/graphql',
+                    data=payload,
+                    headers=headers,
+                    timeout=30
+                )
+            )
+            
+            if response.status_code != 200:
+                return None
+            
+            data = response.json()
+            media_data = data.get('data', {}).get('xdt_shortcode_media')
+            
+            if not media_data or not media_data.get('is_video'):
+                return None
+            
+            video_url = media_data.get('video_url')
+            if not video_url:
+                return None
+            
+            dimensions = media_data.get('dimensions', {})
+            
+            return {
+                'video_url': video_url,
+                'width': str(dimensions.get('width', 640)),
+                'height': str(dimensions.get('height', 640)),
+                'thumbnail': media_data.get('display_url')
+            }
+            
+        except Exception as e:
+            logger.error(f"GraphQL error: {e}")
+            return None
+    
+    async def _get_instagram_webpage(self, post_id: str) -> Optional[Dict[str, str]]:
+        """Get Instagram video from webpage meta tags"""
+        try:
+            import requests
+            
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.get(
+                    f"https://www.instagram.com/p/{post_id}/",
+                    headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'},
+                    timeout=30
+                )
+            )
+            
+            if response.status_code != 200:
+                return None
+            
+            html = response.text
+            
+            # Extract video URL from meta tag
+            video_match = re.search(r'<meta property="og:video" content="([^"]+)"', html)
+            if not video_match:
+                return None
+            
+            return {
+                'video_url': video_match.group(1),
+                'width': '640',
+                'height': '640',
+                'thumbnail': None
+            }
+            
+        except Exception as e:
+            logger.error(f"Webpage scraping error: {e}")
+            return None
     
     async def _process_video(self, result: DownloadResult, quality: str,
                             progress_callback=None) -> DownloadResult:
