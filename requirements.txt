@@ -4,3 +4,4 @@ aiohttp==3.10.10
 aiofiles==24.1.0
 yt-dlp
 psutil==6.1.0
+instaloader>=4.15

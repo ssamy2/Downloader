@@ -122,29 +122,52 @@ class MediaDownloader:
     
     async def _download_instagram_scraper(self, url: str, quality: str,
                                           progress_callback=None, download_audio: bool = False) -> DownloadResult:
-        """Download Instagram video using webpage scraping"""
+        """Download Instagram video using multiple methods with fallback"""
         try:
             import requests
             
             if progress_callback:
                 await progress_callback("connecting", 10)
             
-            # Extract post ID
-            post_id = self._extract_instagram_post_id(url)
-            if not post_id:
-                raise Exception("Could not extract post ID from URL")
+            video_url = None
+            thumbnail = None
+            title = ""
             
-            # Try webpage scraping first (more reliable)
-            video_data = await self._get_instagram_webpage(post_id)
+            # Method 1: Try parth-dl extractors (most reliable)
+            try:
+                video_data = await self._get_instagram_parth_dl(url)
+                if video_data and video_data.get('video_url'):
+                    video_url = video_data['video_url']
+                    thumbnail = video_data.get('thumbnail')
+                    title = video_data.get('title', '')
+                    logger.info("Instagram: parth-dl method succeeded")
+            except Exception as e:
+                logger.warning(f"Instagram parth-dl failed: {e}")
             
-            # If webpage fails, try GraphQL
-            if not video_data:
-                video_data = await self._get_instagram_graphql(post_id)
+            # Method 2: Try instaloader (fallback)
+            if not video_url:
+                try:
+                    video_data = await self._get_instagram_instaloader(url)
+                    if video_data and video_data.get('video_url'):
+                        video_url = video_data['video_url']
+                        thumbnail = video_data.get('thumbnail')
+                        title = video_data.get('title', '')
+                        logger.info("Instagram: instaloader method succeeded")
+                except Exception as e:
+                    logger.warning(f"Instagram instaloader failed: {e}")
             
-            if not video_data or not video_data.get('video_url'):
-                raise Exception("Could not extract video URL")
+            # Method 3: Try direct GraphQL (last resort)
+            if not video_url:
+                post_id = self._extract_instagram_post_id(url)
+                if post_id:
+                    video_data = await self._get_instagram_graphql(post_id)
+                    if video_data and video_data.get('video_url'):
+                        video_url = video_data['video_url']
+                        thumbnail = video_data.get('thumbnail')
+                        logger.info("Instagram: GraphQL method succeeded")
             
-            video_url = video_data['video_url']
+            if not video_url:
+                raise Exception("All Instagram methods failed")
             
             if progress_callback:
                 await progress_callback("downloading", 30)
@@ -587,6 +610,100 @@ class MediaDownloader:
         except Exception as e:
             logger.error(f"Conversion error: {e}")
             return False
+    
+    async def _get_instagram_parth_dl(self, url: str) -> Optional[Dict[str, str]]:
+        """Get Instagram video using parth-dl extractors"""
+        try:
+            import urllib.request
+            import urllib.parse
+            
+            # Extract shortcode
+            post_id = self._extract_instagram_post_id(url)
+            if not post_id:
+                return None
+            
+            loop = asyncio.get_event_loop()
+            
+            # Convert shortcode to media_id
+            alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+            media_id = 0
+            for char in post_id:
+                media_id = media_id * 64 + alphabet.index(char)
+            media_id = str(media_id)
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Origin': 'https://www.instagram.com',
+                'Referer': 'https://www.instagram.com/',
+                'X-IG-App-ID': '936619743392459',
+            }
+            
+            # Try GraphQL method (most reliable from parth-dl)
+            variables = {
+                'shortcode': post_id,
+                'child_comment_count': 0,
+                'fetch_comment_count': 0,
+                'parent_comment_count': 0,
+                'has_threaded_comments': False,
+            }
+            
+            query_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={urllib.parse.quote(json.dumps(variables))}"
+            
+            def make_request():
+                req = urllib.request.Request(query_url, headers=headers)
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    return response.read().decode('utf-8')
+            
+            response_text = await loop.run_in_executor(None, make_request)
+            data = json.loads(response_text)
+            
+            media = data.get('data', {}).get('xdt_shortcode_media', {})
+            if media and media.get('video_url'):
+                return {
+                    'video_url': media['video_url'],
+                    'thumbnail': media.get('display_url'),
+                    'title': '',
+                    'width': media.get('dimensions', {}).get('width', 640),
+                    'height': media.get('dimensions', {}).get('height', 640),
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"parth-dl error: {e}")
+            return None
+    
+    async def _get_instagram_instaloader(self, url: str) -> Optional[Dict[str, str]]:
+        """Get Instagram video using instaloader library"""
+        try:
+            import instaloader
+            
+            post_id = self._extract_instagram_post_id(url)
+            if not post_id:
+                return None
+            
+            loop = asyncio.get_event_loop()
+            
+            def get_post_info():
+                L = instaloader.Instaloader()
+                post = instaloader.Post.from_shortcode(L.context, post_id)
+                
+                if post.is_video:
+                    return {
+                        'video_url': post.video_url,
+                        'thumbnail': post.url,
+                        'title': post.caption[:100] if post.caption else '',
+                    }
+                return None
+            
+            result = await loop.run_in_executor(None, get_post_info)
+            return result
+            
+        except Exception as e:
+            logger.error(f"instaloader error: {e}")
+            return None
     
     def _extract_instagram_post_id(self, url: str) -> Optional[str]:
         """Extract post ID from Instagram URL"""
