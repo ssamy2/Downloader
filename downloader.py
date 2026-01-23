@@ -156,7 +156,17 @@ class MediaDownloader:
                 except Exception as e:
                     logger.warning(f"Instagram instaloader failed: {e}")
             
-            # Method 3: Try direct GraphQL (last resort)
+            # Method 3: Try Cobalt API (works well for Instagram)
+            if not video_url:
+                try:
+                    cobalt_result = await self._download_with_cobalt(url, quality, 'instagram', progress_callback)
+                    if cobalt_result.success and cobalt_result.file_path:
+                        logger.info("Instagram: Cobalt API method succeeded")
+                        return cobalt_result
+                except Exception as e:
+                    logger.warning(f"Instagram Cobalt failed: {e}")
+            
+            # Method 4: Try direct GraphQL (last resort)
             if not video_url:
                 post_id = self._extract_instagram_post_id(url)
                 if post_id:
