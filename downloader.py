@@ -122,7 +122,7 @@ class MediaDownloader:
     
     async def _download_instagram_scraper(self, url: str, quality: str,
                                           progress_callback=None, download_audio: bool = False) -> DownloadResult:
-        """Download Instagram video using GraphQL API"""
+        """Download Instagram video using webpage scraping"""
         try:
             import requests
             
@@ -134,12 +134,12 @@ class MediaDownloader:
             if not post_id:
                 raise Exception("Could not extract post ID from URL")
             
-            # Try GraphQL API first
-            video_data = await self._get_instagram_graphql(post_id)
+            # Try webpage scraping first (more reliable)
+            video_data = await self._get_instagram_webpage(post_id)
             
+            # If webpage fails, try GraphQL
             if not video_data:
-                # Fallback to webpage scraping
-                video_data = await self._get_instagram_webpage(post_id)
+                video_data = await self._get_instagram_graphql(post_id)
             
             if not video_data or not video_data.get('video_url'):
                 raise Exception("Could not extract video URL")
@@ -685,32 +685,62 @@ class MediaDownloader:
         try:
             import requests
             
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: requests.get(
-                    f"https://www.instagram.com/p/{post_id}/",
-                    headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'},
-                    timeout=30
-                )
-            )
-            
-            if response.status_code != 200:
-                return None
-            
-            html = response.text
-            
-            # Extract video URL from meta tag
-            video_match = re.search(r'<meta property="og:video" content="([^"]+)"', html)
-            if not video_match:
-                return None
-            
-            return {
-                'video_url': video_match.group(1),
-                'width': '640',
-                'height': '640',
-                'thumbnail': None
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Cache-Control': 'max-age=0',
             }
+            
+            # Try both /p/ and /reel/ URLs
+            urls_to_try = [
+                f"https://www.instagram.com/p/{post_id}/",
+                f"https://www.instagram.com/reel/{post_id}/"
+            ]
+            
+            loop = asyncio.get_event_loop()
+            
+            for url in urls_to_try:
+                try:
+                    response = await loop.run_in_executor(
+                        None,
+                        lambda u=url: requests.get(u, headers=headers, timeout=30, allow_redirects=True)
+                    )
+                    
+                    if response.status_code != 200:
+                        continue
+                    
+                    html = response.text
+                    
+                    # Extract video URL from meta tag
+                    video_match = re.search(r'<meta property="og:video" content="([^"]+)"', html)
+                    if video_match:
+                        video_url = video_match.group(1)
+                        
+                        # Extract dimensions
+                        width_match = re.search(r'<meta property="og:video:width" content="([^"]+)"', html)
+                        height_match = re.search(r'<meta property="og:video:height" content="([^"]+)"', html)
+                        thumb_match = re.search(r'<meta property="og:image" content="([^"]+)"', html)
+                        
+                        logger.info(f"Successfully extracted video from webpage: {url}")
+                        return {
+                            'video_url': video_url,
+                            'width': width_match.group(1) if width_match else '640',
+                            'height': height_match.group(1) if height_match else '640',
+                            'thumbnail': thumb_match.group(1) if thumb_match else None
+                        }
+                except Exception as e:
+                    logger.debug(f"Failed to fetch {url}: {e}")
+                    continue
+            
+            return None
             
         except Exception as e:
             logger.error(f"Webpage scraping error: {e}")
