@@ -103,6 +103,13 @@ class MediaDownloader:
                 return result
             logger.warning("TikTok API failed, falling back to yt-dlp")
         
+        # Try Instagram scraper for Instagram (bypasses rate limits)
+        if platform == 'instagram':
+            result = await self._download_instagram_scraper(url, quality, progress_callback, download_audio)
+            if result.success:
+                return result
+            logger.warning("Instagram scraper failed, falling back to yt-dlp")
+        
         # Fallback to yt-dlp for all platforms
         result = await self._download_with_ytdlp(url, quality, platform, progress_callback, download_audio)
         
@@ -111,6 +118,22 @@ class MediaDownloader:
             result = await self._process_video(result, quality, progress_callback)
         
         return result
+    
+    async def _download_instagram_scraper(self, url: str, quality: str,
+                                          progress_callback=None, download_audio: bool = False) -> DownloadResult:
+        """Download Instagram video using yt-dlp with optimized settings"""
+        try:
+            # Instagram works better with yt-dlp directly
+            # The scraper approach is too unreliable due to Cloudflare protection
+            return await self._download_with_ytdlp(url, quality, 'instagram', progress_callback, download_audio)
+            
+        except Exception as e:
+            logger.error(f"Instagram download error: {e}")
+            return DownloadResult(
+                success=False,
+                error=str(e),
+                platform='instagram'
+            )
     
     async def _download_tiktok_api(self, url: str, quality: str, 
                                    progress_callback=None, download_audio: bool = False) -> DownloadResult:

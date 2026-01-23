@@ -265,6 +265,9 @@ def get_quality_keyboard(url: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="✨ الجودة الأصلية", callback_data=f"dl:original")
         ],
         [
+            InlineKeyboardButton(text="🎵 تحميل صوتي فقط", callback_data=f"dl:audio")
+        ],
+        [
             InlineKeyboardButton(text="❌ إلغاء", callback_data="dl:cancel")
         ]
     ])
@@ -369,7 +372,8 @@ async def process_download(
     user_id: int,
     url: str, 
     quality: str,
-    status_message: Message
+    status_message: Message,
+    download_audio: bool = False
 ) -> None:
     """Process a download request"""
     start_time = datetime.now()
@@ -397,7 +401,7 @@ async def process_download(
                 pass
         
         # Download
-        result = await downloader.download(url, quality, update_progress)
+        result = await downloader.download(url, quality, update_progress, download_audio)
         
         if not result.success:
             raise Exception(result.error or "Download failed")
@@ -410,8 +414,8 @@ async def process_download(
         if file_size_mb > 50:
             raise Exception(f"File too large: {file_size_mb:.1f}MB (max 50MB)")
         
-        # Send video
-        video_file = FSInputFile(result.file_path)
+        # Send file (audio or video)
+        file_obj = FSInputFile(result.file_path)
         
         duration = (datetime.now() - start_time).total_seconds()
         caption = messages.SUCCESS.format(
@@ -419,13 +423,23 @@ async def process_download(
             time=f"{duration:.1f}"
         )
         
-        await bot.send_video(
-            chat_id=chat_id,
-            video=video_file,
-            caption=caption,
-            parse_mode="HTML",
-            supports_streaming=True
-        )
+        if download_audio:
+            # Send as audio file
+            await bot.send_audio(
+                chat_id=chat_id,
+                audio=file_obj,
+                caption=caption,
+                parse_mode="HTML"
+            )
+        else:
+            # Send as video
+            await bot.send_video(
+                chat_id=chat_id,
+                video=file_obj,
+                caption=caption,
+                parse_mode="HTML",
+                supports_streaming=True
+            )
         
         # Delete status message
         await status_message.delete()
@@ -607,15 +621,18 @@ async def quality_callback(callback: CallbackQuery, bot: Bot):
         await callback.message.delete()
         return
     
-    quality = action  # standard, hd, or original
+    # Check if audio download
+    download_audio = (action == "audio")
+    quality = "hd" if download_audio else action  # Use HD quality for audio extraction
     
     # Handle single URL
     if 'url' in pending:
         url = pending['url']
         
         # Update message to processing status
+        status_text = "🎵 <b>جاري تحميل الصوت...</b>" if download_audio else messages.PROCESSING
         status_msg = await callback.message.edit_text(
-            messages.PROCESSING,
+            status_text,
             parse_mode="HTML"
         )
         
@@ -630,7 +647,8 @@ async def quality_callback(callback: CallbackQuery, bot: Bot):
             user_id=user_id,
             url=url,
             quality=quality,
-            status_message=status_msg
+            status_message=status_msg,
+            download_audio=download_audio
         )
     
     # Handle batch URLs
