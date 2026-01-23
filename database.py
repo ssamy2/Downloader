@@ -65,6 +65,9 @@ class Database:
                     is_banned INTEGER DEFAULT 0,
                     is_admin INTEGER DEFAULT 0,
                     is_secondary_owner INTEGER DEFAULT 0,
+                    can_download INTEGER DEFAULT 1,
+                    can_use_quality INTEGER DEFAULT 1,
+                    can_download_audio INTEGER DEFAULT 1,
                     downloads_today INTEGER DEFAULT 0,
                     total_downloads INTEGER DEFAULT 0,
                     last_download TEXT,
@@ -72,6 +75,9 @@ class Database:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            
+            # Auto-migrate: add permission columns if they don't exist
+            await self._auto_migrate_permissions()
             
             # Downloads log table
             await self._connection.execute("""
@@ -122,6 +128,30 @@ class Database:
             """)
             
             await self._connection.commit()
+    
+    async def _auto_migrate_permissions(self) -> None:
+        """Auto-migrate database to add permission columns if missing"""
+        try:
+            # Check if columns exist
+            cursor = await self._connection.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in await cursor.fetchall()]
+            
+            # Add missing permission columns
+            if 'can_download' not in columns:
+                await self._connection.execute("ALTER TABLE users ADD COLUMN can_download INTEGER DEFAULT 1")
+                logger.info("Added 'can_download' column to users table")
+            
+            if 'can_use_quality' not in columns:
+                await self._connection.execute("ALTER TABLE users ADD COLUMN can_use_quality INTEGER DEFAULT 1")
+                logger.info("Added 'can_use_quality' column to users table")
+            
+            if 'can_download_audio' not in columns:
+                await self._connection.execute("ALTER TABLE users ADD COLUMN can_download_audio INTEGER DEFAULT 1")
+                logger.info("Added 'can_download_audio' column to users table")
+            
+            await self._connection.commit()
+        except Exception as e:
+            logger.error(f"Auto-migration error: {e}")
     
     # ==================== User Management ====================
     
@@ -199,6 +229,33 @@ class Database:
     async def set_secondary_owner(self, user_id: int, is_owner: bool = True) -> bool:
         """Set user as secondary owner"""
         return await self.update_user(user_id, is_secondary_owner=int(is_owner))
+    
+    async def set_user_permission(self, user_id: int, permission: str, value: bool) -> bool:
+        """Set user permission (can_download, can_use_quality, can_download_audio)"""
+        valid_permissions = ['can_download', 'can_use_quality', 'can_download_audio']
+        if permission not in valid_permissions:
+            return False
+        return await self.update_user(user_id, **{permission: int(value)})
+    
+    async def get_user_permissions(self, user_id: int) -> Dict[str, bool]:
+        """Get user permissions"""
+        user = await self.get_user(user_id)
+        if not user:
+            return {'can_download': True, 'can_use_quality': True, 'can_download_audio': True}
+        
+        async with self._lock:
+            cursor = await self._connection.execute(
+                "SELECT can_download, can_use_quality, can_download_audio FROM users WHERE user_id = ?", 
+                (user_id,)
+            )
+            row = await cursor.fetchone()
+            if row:
+                return {
+                    'can_download': bool(row['can_download']),
+                    'can_use_quality': bool(row['can_use_quality']),
+                    'can_download_audio': bool(row['can_download_audio'])
+                }
+            return {'can_download': True, 'can_use_quality': True, 'can_download_audio': True}
     
     async def get_all_users(self) -> List[int]:
         """Get all user IDs"""

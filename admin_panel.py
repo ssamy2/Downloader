@@ -36,6 +36,8 @@ class AdminStates(StatesGroup):
     waiting_channel = State()
     waiting_channel_link = State()
     waiting_notification_chat = State()
+    waiting_permission_user_id = State()
+    waiting_permission_action = State()
 
 
 def is_owner(user_id: int) -> bool:
@@ -86,6 +88,7 @@ def get_users_menu() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🚫 حظر مستخدم", callback_data="admin_users:ban")],
         [InlineKeyboardButton(text="✅ إلغاء حظر", callback_data="admin_users:unban")],
         [InlineKeyboardButton(text="🔄 إعادة تعيين الحد", callback_data="admin_users:reset")],
+        [InlineKeyboardButton(text="🔐 صلاحيات المستخدم", callback_data="admin_users:permissions")],
         [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_menu:back")]
     ])
 
@@ -291,6 +294,131 @@ async def process_unban(message: Message, state: FSMContext):
         
     except ValueError:
         await message.answer("❌ معرف غير صالح! أرسل رقم صحيح")
+
+
+@admin_router.callback_query(F.data == "admin_users:permissions")
+async def user_permissions_prompt(callback: CallbackQuery, state: FSMContext):
+    """Prompt for user ID to manage permissions"""
+    if not is_owner(callback.from_user.id):
+        await callback.answer("⛔ هذه الميزة للمالك فقط", show_alert=True)
+        return
+    
+    text = """
+🔐 <b>إدارة صلاحيات المستخدم</b>
+
+أرسل معرف المستخدم (User ID):
+"""
+    
+    await callback.message.edit_text(text, reply_markup=get_back_button(), parse_mode="HTML")
+    await state.set_state(AdminStates.waiting_permission_user_id)
+
+
+@admin_router.message(AdminStates.waiting_permission_user_id)
+async def process_permission_user(message: Message, state: FSMContext):
+    """Process permission user ID and show permission menu"""
+    try:
+        user_id = int(message.text.strip())
+        
+        # Get current permissions
+        perms = await db.get_user_permissions(user_id)
+        
+        # Store user_id in state
+        await state.update_data(target_user_id=user_id)
+        
+        # Create permission buttons
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text=f"📥 التحميل: {'✅' if perms['can_download'] else '❌'}",
+                callback_data=f"perm:toggle:can_download:{user_id}"
+            )],
+            [InlineKeyboardButton(
+                text=f"🎬 اختيار الجودة: {'✅' if perms['can_use_quality'] else '❌'}",
+                callback_data=f"perm:toggle:can_use_quality:{user_id}"
+            )],
+            [InlineKeyboardButton(
+                text=f"🎵 تحميل صوتي: {'✅' if perms['can_download_audio'] else '❌'}",
+                callback_data=f"perm:toggle:can_download_audio:{user_id}"
+            )],
+            [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_menu:users")]
+        ])
+        
+        text = f"""
+🔐 <b>صلاحيات المستخدم</b>
+
+🆔 المستخدم: <code>{user_id}</code>
+
+<b>الصلاحيات الحالية:</b>
+📥 التحميل: {'✅ مفعّل' if perms['can_download'] else '❌ معطّل'}
+🎬 اختيار الجودة: {'✅ مفعّل' if perms['can_use_quality'] else '❌ معطّل'}
+🎵 تحميل صوتي: {'✅ مفعّل' if perms['can_download_audio'] else '❌ معطّل'}
+
+<i>اضغط على الصلاحية لتبديلها</i>
+"""
+        
+        await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+        await state.clear()
+        
+    except ValueError:
+        await message.answer("❌ معرف غير صالح! أرسل رقم صحيح")
+
+
+@admin_router.callback_query(F.data.startswith("perm:toggle:"))
+async def toggle_permission(callback: CallbackQuery):
+    """Toggle user permission"""
+    if not is_owner(callback.from_user.id):
+        await callback.answer("⛔ هذه الميزة للمالك فقط", show_alert=True)
+        return
+    
+    try:
+        _, _, permission, user_id = callback.data.split(":")
+        user_id = int(user_id)
+        
+        # Get current permissions
+        perms = await db.get_user_permissions(user_id)
+        
+        # Toggle the permission
+        new_value = not perms[permission]
+        await db.set_user_permission(user_id, permission, new_value)
+        
+        # Get updated permissions
+        perms = await db.get_user_permissions(user_id)
+        
+        # Update keyboard
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text=f"📥 التحميل: {'✅' if perms['can_download'] else '❌'}",
+                callback_data=f"perm:toggle:can_download:{user_id}"
+            )],
+            [InlineKeyboardButton(
+                text=f"🎬 اختيار الجودة: {'✅' if perms['can_use_quality'] else '❌'}",
+                callback_data=f"perm:toggle:can_use_quality:{user_id}"
+            )],
+            [InlineKeyboardButton(
+                text=f"🎵 تحميل صوتي: {'✅' if perms['can_download_audio'] else '❌'}",
+                callback_data=f"perm:toggle:can_download_audio:{user_id}"
+            )],
+            [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_menu:users")]
+        ])
+        
+        text = f"""
+🔐 <b>صلاحيات المستخدم</b>
+
+🆔 المستخدم: <code>{user_id}</code>
+
+<b>الصلاحيات الحالية:</b>
+📥 التحميل: {'✅ مفعّل' if perms['can_download'] else '❌ معطّل'}
+🎬 اختيار الجودة: {'✅ مفعّل' if perms['can_use_quality'] else '❌ معطّل'}
+🎵 تحميل صوتي: {'✅ مفعّل' if perms['can_download_audio'] else '❌ معطّل'}
+
+<i>اضغط على الصلاحية لتبديلها</i>
+"""
+        
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        await callback.answer("✅ تم التحديث", show_alert=False)
+        
+    except Exception as e:
+        logger.error(f"Error toggling permission: {e}")
+        await callback.answer("❌ حدث خطأ", show_alert=True)
 
 
 @admin_router.callback_query(F.data == "admin_users:reset")

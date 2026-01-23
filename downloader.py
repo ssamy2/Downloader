@@ -82,9 +82,9 @@ class MediaDownloader:
         return f"{timestamp}_{url_hash}.{ext}"
     
     async def download(self, url: str, quality: str = "hd", 
-                      progress_callback=None) -> DownloadResult:
+                      progress_callback=None, download_audio: bool = False) -> DownloadResult:
         """
-        Main download method - tries Cobalt first, then yt-dlp as fallback
+        Main download method - tries platform-specific API first, then yt-dlp as fallback
         """
         platform = self.detect_platform(url)
         if not platform:
@@ -96,14 +96,118 @@ class MediaDownloader:
         
         logger.info(f"Downloading from {platform}: {url}")
         
-        # Use yt-dlp directly (Cobalt v7 API shut down Nov 2024)
-        result = await self._download_with_ytdlp(url, quality, platform, progress_callback)
+        # Try TikTok API first (faster and supports quality selection)
+        if platform == 'tiktok':
+            result = await self._download_tiktok_api(url, quality, progress_callback, download_audio)
+            if result.success:
+                return result
+            logger.warning("TikTok API failed, falling back to yt-dlp")
+        
+        # Fallback to yt-dlp for all platforms
+        result = await self._download_with_ytdlp(url, quality, platform, progress_callback, download_audio)
         
         # Compress if needed
         if result.success and quality != "original":
             result = await self._process_video(result, quality, progress_callback)
         
         return result
+    
+    async def _download_tiktok_api(self, url: str, quality: str, 
+                                   progress_callback=None, download_audio: bool = False) -> DownloadResult:
+        """Download TikTok video using tikwm.com API"""
+        try:
+            import requests
+            
+            if progress_callback:
+                await progress_callback("connecting", 10)
+            
+            # Request with HD parameter
+            api_url = f"https://www.tikwm.com/api/?url={url}"
+            if quality in ['hd', '1080p', '720p', 'original']:
+                api_url += "&hd=1"
+            
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None, 
+                lambda: requests.get(api_url, timeout=30)
+            )
+            
+            data = response.json()
+            
+            if data.get('code') != 0:
+                return DownloadResult(
+                    success=False,
+                    error="TikTok API: Video not available",
+                    platform='tiktok'
+                )
+            
+            video_data = data['data']
+            
+            # Select video URL based on quality
+            if quality in ['hd', '1080p', '720p', 'original'] and 'hdplay' in video_data:
+                video_url = video_data['hdplay']
+                logger.info("Using HD quality from TikTok API")
+            else:
+                video_url = video_data['play']
+                logger.info("Using standard quality from TikTok API")
+            
+            # Fix URL if relative
+            if not video_url.startswith('http'):
+                video_url = "https://www.tikwm.com" + video_url
+            
+            if progress_callback:
+                await progress_callback("downloading", 30)
+            
+            # Download video
+            video_response = await loop.run_in_executor(
+                None,
+                lambda: requests.get(video_url, timeout=60)
+            )
+            
+            if video_response.status_code != 200:
+                return DownloadResult(
+                    success=False,
+                    error=f"Failed to download video: HTTP {video_response.status_code}",
+                    platform='tiktok'
+                )
+            
+            # Save file
+            ext = "mp3" if download_audio else "mp4"
+            filename = self._generate_filename(url, ext)
+            file_path = os.path.join(self.download_dir, filename)
+            
+            with open(file_path, 'wb') as f:
+                f.write(video_response.content)
+            
+            file_size = os.path.getsize(file_path)
+            
+            # Convert to audio if requested
+            if download_audio:
+                audio_path = await self._extract_audio(file_path)
+                if audio_path:
+                    os.remove(file_path)
+                    file_path = audio_path
+                    file_size = os.path.getsize(file_path)
+            
+            if progress_callback:
+                await progress_callback("downloaded", 90)
+            
+            return DownloadResult(
+                success=True,
+                file_path=file_path,
+                file_size=file_size,
+                platform='tiktok',
+                title=video_data.get('title', ''),
+                thumbnail=video_data.get('cover')
+            )
+            
+        except Exception as e:
+            logger.error(f"TikTok API error: {e}")
+            return DownloadResult(
+                success=False,
+                error=str(e),
+                platform='tiktok'
+            )
     
     async def _download_with_cobalt(self, url: str, quality: str, 
                                     platform: str, progress_callback=None) -> DownloadResult:
@@ -231,7 +335,7 @@ class MediaDownloader:
             )
     
     async def _download_with_ytdlp(self, url: str, quality: str,
-                                   platform: str, progress_callback=None) -> DownloadResult:
+                                   platform: str, progress_callback=None, download_audio: bool = False) -> DownloadResult:
         """Download using yt-dlp (especially for Kwai)"""
         try:
             filename = self._generate_filename(url)
@@ -249,19 +353,28 @@ class MediaDownloader:
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
             }
             
-            # Quality-based format selection - use simple 'best' with ext filter
-            quality_map = {
-                '144p': 144, '240p': 240, '360p': 360, '480p': 480,
-                'standard': 480, '720p': 720, 'hd': 720, '1080p': 1080,
-                '1440p': 1440, '2160p': 2160, '4k': 2160, 'original': 9999
-            }
-            max_height = quality_map.get(quality, 720)
-            
-            # Use best[ext=mp4] with height filter, fallback to best
-            if max_height < 9999:
-                ydl_opts['format'] = f'best[ext=mp4][height<={max_height}]/best[height<={max_height}]/best[ext=mp4]/best'
+            # Audio-only download
+            if download_audio:
+                ydl_opts['format'] = 'bestaudio/best'
+                ydl_opts['postprocessors'] = [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }]
             else:
-                ydl_opts['format'] = 'best[ext=mp4]/best'
+                # Quality-based format selection - use simple 'best' with ext filter
+                quality_map = {
+                    '144p': 144, '240p': 240, '360p': 360, '480p': 480,
+                    'standard': 480, '720p': 720, 'hd': 720, '1080p': 1080,
+                    '1440p': 1440, '2160p': 2160, '4k': 2160, 'original': 9999
+                }
+                max_height = quality_map.get(quality, 720)
+                
+                # Use best[ext=mp4] with height filter, fallback to best
+                if max_height < 9999:
+                    ydl_opts['format'] = f'best[ext=mp4][height<={max_height}]/best[height<={max_height}]/best[ext=mp4]/best'
+                else:
+                    ydl_opts['format'] = 'best[ext=mp4]/best'
             
             if progress_callback:
                 await progress_callback("downloading", 20)
@@ -281,17 +394,26 @@ class MediaDownloader:
             # Find the downloaded file
             actual_path = None
             base_path = file_path.replace('.mp4', '')
-            for ext in ['mp4', 'webm', 'mkv', 'mov', 'avi', 'flv']:
-                check_path = f"{base_path}.{ext}"
-                if os.path.exists(check_path):
-                    actual_path = check_path
-                    break
+            
+            # Check for audio files if download_audio is True
+            if download_audio:
+                for ext in ['mp3', 'opus', 'm4a', 'webm']:
+                    check_path = f"{base_path}.{ext}"
+                    if os.path.exists(check_path):
+                        actual_path = check_path
+                        break
+            else:
+                for ext in ['mp4', 'webm', 'mkv', 'mov', 'avi', 'flv']:
+                    check_path = f"{base_path}.{ext}"
+                    if os.path.exists(check_path):
+                        actual_path = check_path
+                        break
             
             if not actual_path or not os.path.exists(actual_path):
                 raise Exception("Downloaded file not found on disk")
             
-            # Convert to mp4 if needed
-            if not actual_path.endswith('.mp4'):
+            # Convert to mp4 if needed (video only)
+            if not download_audio and not actual_path.endswith('.mp4'):
                 new_path = actual_path.rsplit('.', 1)[0] + '.mp4'
                 converted = await self._convert_to_mp4(actual_path, new_path)
                 if converted:
@@ -328,6 +450,33 @@ class MediaDownloader:
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
             return info
+    
+    async def _extract_audio(self, input_path: str) -> Optional[str]:
+        """Extract audio from video file"""
+        try:
+            output_path = input_path.rsplit('.', 1)[0] + '.mp3'
+            cmd = [
+                config.FFMPEG_PATH,
+                '-i', input_path,
+                '-vn',
+                '-acodec', 'libmp3lame',
+                '-ab', '192k',
+                '-y',
+                output_path
+            ]
+            
+            loop = asyncio.get_event_loop()
+            process = await loop.run_in_executor(
+                None,
+                lambda: subprocess.run(cmd, capture_output=True, timeout=300)
+            )
+            
+            if process.returncode == 0 and os.path.exists(output_path):
+                return output_path
+            return None
+        except Exception as e:
+            logger.error(f"Audio extraction error: {e}")
+            return None
     
     async def _convert_to_mp4(self, input_path: str, output_path: str) -> bool:
         """Convert video to MP4 format"""
