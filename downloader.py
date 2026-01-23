@@ -12,6 +12,7 @@ from typing import Optional, Dict, Any, Tuple, List
 from dataclasses import dataclass
 from datetime import datetime
 import hashlib
+import json
 import yt_dlp
 
 from config import config, URL_PATTERNS, QUALITY_SETTINGS
