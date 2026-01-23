@@ -20,6 +20,14 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode, ChatMemberStatus
 import json
+
+# Import cookie manager
+try:
+    from cookie_manager import CookieManager, cookie_checker_task
+    COOKIE_MANAGER_AVAILABLE = True
+except ImportError:
+    COOKIE_MANAGER_AVAILABLE = False
+    logger = logging.getLogger(__name__)
 # Auto-setup: Check and install dependencies
 def run_auto_setup():
     """Run automatic setup if needed"""
@@ -772,6 +780,16 @@ async def main():
     await db.connect()
     logger.info("✅ Bot starting up...")
     
+    # Initialize cookie manager
+    cookie_manager = None
+    if COOKIE_MANAGER_AVAILABLE:
+        try:
+            cookie_manager = CookieManager()
+            cookie_manager.print_status()
+            logger.info("✅ Cookie manager initialized")
+        except Exception as e:
+            logger.warning(f"⚠️  Cookie manager error: {e}")
+    
     # Create dispatcher
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
@@ -806,6 +824,15 @@ async def main():
         logger.info("=" * 50)
         logger.info("📡 Polling started - waiting for updates...")
         logger.info("=" * 50)
+        
+        # Start cookie checker task if available
+        cookie_task = None
+        if COOKIE_MANAGER_AVAILABLE:
+            try:
+                cookie_task = asyncio.create_task(cookie_checker_task())
+                logger.info("✅ Cookie checker task started")
+            except Exception as e:
+                logger.warning(f"⚠️  Could not start cookie checker: {e}")
         
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
         
