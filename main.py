@@ -32,7 +32,8 @@ def run_auto_setup():
         ('aiohttp', '3.10.10'),
         ('aiofiles', '24.1.0'),
         ('yt_dlp', '2024.11.18'),
-        ('psutil', '6.1.0')
+        ('psutil', '6.1.0'),
+        ('playwright', '1.40.0')
     ]
     
     missing_packages = []
@@ -142,6 +143,23 @@ def run_auto_setup():
         dir_path = Path(dir_name)
         dir_path.mkdir(exist_ok=True)
     
+    # Install Playwright browsers automatically
+    print("\n🎬 Checking Playwright browsers...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            capture_output=True,
+            timeout=300
+        )
+        if result.returncode == 0:
+            print("✅ Playwright Chromium browser ready")
+        else:
+            print("⚠️  Playwright browser installation had issues")
+    except Exception as e:
+        print(f"⚠️  Could not install Playwright browsers: {e}")
+        print("🔧 Please run manually: python -m playwright install chromium")
+    
     print("✅ All dependencies ready!")
     return True
 
@@ -246,6 +264,22 @@ async def notify_download(bot: Bot, user_id: int, url: str, platform: str) -> No
 
 def get_quality_keyboard(url: str) -> InlineKeyboardMarkup:
     """Create quality selection keyboard with detailed options"""
+    # Check if Instagram URL
+    is_instagram = 'instagram.com' in url.lower()
+    
+    # Instagram: فيديو وصوت فقط (بدون خيارات جودة)
+    if is_instagram:
+        return InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🎬 تحميل الفيديو", callback_data=f"dl:original"),
+                InlineKeyboardButton(text="🎵 تحميل الصوت", callback_data=f"dl:audio")
+            ],
+            [
+                InlineKeyboardButton(text="❌ إلغاء", callback_data="dl:cancel")
+            ]
+        ])
+    
+    # Other platforms: جميع خيارات الجودة
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="📱 144p", callback_data=f"dl:144p"),
