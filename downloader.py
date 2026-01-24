@@ -8,6 +8,7 @@ import aiohttp
 import aiofiles
 import subprocess
 import logging
+import tempfile
 from typing import Optional, Dict, Any, Tuple, List
 from dataclasses import dataclass
 from datetime import datetime
