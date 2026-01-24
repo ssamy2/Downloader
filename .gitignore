@@ -34,13 +34,6 @@ config.local.py
 downloads/*
 test_downloads/*
 *.log
-logs/
-
-# Cookies and sensitive data
-cookies.txt
-cookies.txt.backup
-*.cookies
-.cookies
 
 # Temp files
 temp/

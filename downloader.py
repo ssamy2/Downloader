@@ -122,85 +122,36 @@ class MediaDownloader:
     
     async def _download_instagram_scraper(self, url: str, quality: str,
                                           progress_callback=None, download_audio: bool = False) -> DownloadResult:
-        """Download Instagram video using multiple methods with fallback"""
+        """Download Instagram video using browser automation"""
         try:
-            import requests
+            from instagram_browser_scraper import get_browser_manager
             
             if progress_callback:
                 await progress_callback("connecting", 10)
             
-            video_url = None
-            thumbnail = None
-            title = ""
+            # Get browser manager
+            manager = await get_browser_manager()
             
-            # Method 1: Try parth-dl extractors (most reliable)
-            try:
-                video_data = await self._get_instagram_parth_dl(url)
-                if video_data and video_data.get('video_url'):
-                    video_url = video_data['video_url']
-                    thumbnail = video_data.get('thumbnail')
-                    title = video_data.get('title', '')
-                    logger.info("Instagram: parth-dl method succeeded")
-            except Exception as e:
-                logger.warning(f"Instagram parth-dl failed: {e}")
-            
-            # Method 2: Try instaloader (fallback)
-            if not video_url:
-                try:
-                    video_data = await self._get_instagram_instaloader(url)
-                    if video_data and video_data.get('video_url'):
-                        video_url = video_data['video_url']
-                        thumbnail = video_data.get('thumbnail')
-                        title = video_data.get('title', '')
-                        logger.info("Instagram: instaloader method succeeded")
-                except Exception as e:
-                    logger.warning(f"Instagram instaloader failed: {e}")
-            
-            # Method 3: Try Cobalt API (works well for Instagram)
-            if not video_url:
-                try:
-                    cobalt_result = await self._download_with_cobalt(url, quality, 'instagram', progress_callback)
-                    if cobalt_result.success and cobalt_result.file_path:
-                        logger.info("Instagram: Cobalt API method succeeded")
-                        return cobalt_result
-                except Exception as e:
-                    logger.warning(f"Instagram Cobalt failed: {e}")
-            
-            # Method 4: Try direct GraphQL (last resort)
-            if not video_url:
-                post_id = self._extract_instagram_post_id(url)
-                if post_id:
-                    video_data = await self._get_instagram_graphql(post_id)
-                    if video_data and video_data.get('video_url'):
-                        video_url = video_data['video_url']
-                        thumbnail = video_data.get('thumbnail')
-                        logger.info("Instagram: GraphQL method succeeded")
-            
-            if not video_url:
-                raise Exception("All Instagram methods failed")
-            
-            if progress_callback:
-                await progress_callback("downloading", 30)
-            
-            # Download video
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: requests.get(video_url, timeout=60, stream=True)
+            # Generate temp file path
+            temp_file = os.path.join(
+                tempfile.gettempdir(),
+                f"instagram_{os.urandom(8).hex()}.mp4"
             )
             
-            if response.status_code != 200:
-                raise Exception(f"Failed to download: HTTP {response.status_code}")
+            # Download using browser automation
+            success = await manager.download_instagram(url, temp_file, progress_callback)
             
-            # Save file
+            if not success or not os.path.exists(temp_file):
+                raise Exception("Browser scraper failed to download video")
+            
+            # Move to final location
             ext = "mp3" if download_audio else "mp4"
             filename = self._generate_filename(url, ext)
             file_path = os.path.join(self.download_dir, filename)
             
-            with open(file_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
+            # Move temp file to final location
+            import shutil
+            shutil.move(temp_file, file_path)
             
             file_size = os.path.getsize(file_path)
             
@@ -213,7 +164,9 @@ class MediaDownloader:
                     file_size = os.path.getsize(file_path)
             
             if progress_callback:
-                await progress_callback("downloaded", 90)
+                await progress_callback("downloaded", 100)
+            
+            logger.info(f"Instagram download successful: {file_size / 1024 / 1024:.2f} MB")
             
             return DownloadResult(
                 success=True,
@@ -221,7 +174,7 @@ class MediaDownloader:
                 file_size=file_size,
                 platform='instagram',
                 title='',
-                thumbnail=video_data.get('thumbnail')
+                thumbnail=None
             )
             
         except Exception as e:
@@ -621,100 +574,6 @@ class MediaDownloader:
             logger.error(f"Conversion error: {e}")
             return False
     
-    async def _get_instagram_parth_dl(self, url: str) -> Optional[Dict[str, str]]:
-        """Get Instagram video using parth-dl extractors"""
-        try:
-            import urllib.request
-            import urllib.parse
-            
-            # Extract shortcode
-            post_id = self._extract_instagram_post_id(url)
-            if not post_id:
-                return None
-            
-            loop = asyncio.get_event_loop()
-            
-            # Convert shortcode to media_id
-            alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-            media_id = 0
-            for char in post_id:
-                media_id = media_id * 64 + alphabet.index(char)
-            media_id = str(media_id)
-            
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': '*/*',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Origin': 'https://www.instagram.com',
-                'Referer': 'https://www.instagram.com/',
-                'X-IG-App-ID': '936619743392459',
-            }
-            
-            # Try GraphQL method (most reliable from parth-dl)
-            variables = {
-                'shortcode': post_id,
-                'child_comment_count': 0,
-                'fetch_comment_count': 0,
-                'parent_comment_count': 0,
-                'has_threaded_comments': False,
-            }
-            
-            query_url = f"https://www.instagram.com/graphql/query/?doc_id=8845758582119845&variables={urllib.parse.quote(json.dumps(variables))}"
-            
-            def make_request():
-                req = urllib.request.Request(query_url, headers=headers)
-                with urllib.request.urlopen(req, timeout=30) as response:
-                    return response.read().decode('utf-8')
-            
-            response_text = await loop.run_in_executor(None, make_request)
-            data = json.loads(response_text)
-            
-            media = data.get('data', {}).get('xdt_shortcode_media', {})
-            if media and media.get('video_url'):
-                return {
-                    'video_url': media['video_url'],
-                    'thumbnail': media.get('display_url'),
-                    'title': '',
-                    'width': media.get('dimensions', {}).get('width', 640),
-                    'height': media.get('dimensions', {}).get('height', 640),
-                }
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"parth-dl error: {e}")
-            return None
-    
-    async def _get_instagram_instaloader(self, url: str) -> Optional[Dict[str, str]]:
-        """Get Instagram video using instaloader library"""
-        try:
-            import instaloader
-            
-            post_id = self._extract_instagram_post_id(url)
-            if not post_id:
-                return None
-            
-            loop = asyncio.get_event_loop()
-            
-            def get_post_info():
-                L = instaloader.Instaloader()
-                post = instaloader.Post.from_shortcode(L.context, post_id)
-                
-                if post.is_video:
-                    return {
-                        'video_url': post.video_url,
-                        'thumbnail': post.url,
-                        'title': post.caption[:100] if post.caption else '',
-                    }
-                return None
-            
-            result = await loop.run_in_executor(None, get_post_info)
-            return result
-            
-        except Exception as e:
-            logger.error(f"instaloader error: {e}")
-            return None
-    
     def _extract_instagram_post_id(self, url: str) -> Optional[str]:
         """Extract post ID from Instagram URL"""
         patterns = [
@@ -729,149 +588,6 @@ class MediaDownloader:
                 return match.group(1)
         
         return None
-    
-    async def _get_instagram_graphql(self, post_id: str) -> Optional[Dict[str, str]]:
-        """Get Instagram video using GraphQL API"""
-        try:
-            import requests
-            
-            variables = {
-                "shortcode": post_id,
-                "fetch_comment_count": None,
-                "fetch_related_profile_media_count": None,
-                "parent_comment_count": None,
-                "child_comment_count": None,
-                "fetch_like_count": None,
-                "fetch_tagged_user_count": None,
-                "fetch_preview_comment_count": None,
-                "has_threaded_comments": False,
-                "hoisted_comment_id": None,
-                "hoisted_reply_id": None,
-            }
-            
-            payload = {
-                "av": "0",
-                "__d": "www",
-                "__user": "0",
-                "__a": "1",
-                "__req": "3",
-                "dpr": "3",
-                "lsd": "AVqbxe3J_YA",
-                "fb_api_caller_class": "RelayModern",
-                "fb_api_req_friendly_name": "PolarisPostActionLoadPostQueryQuery",
-                "variables": json.dumps(variables),
-                "server_timestamps": "true",
-                "doc_id": "10015901848480474",
-            }
-            
-            headers = {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-IG-App-ID': '1217981644879628',
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36',
-            }
-            
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: requests.post(
-                    'https://www.instagram.com/api/graphql',
-                    data=payload,
-                    headers=headers,
-                    timeout=30
-                )
-            )
-            
-            if response.status_code != 200:
-                return None
-            
-            data = response.json()
-            media_data = data.get('data', {}).get('xdt_shortcode_media')
-            
-            if not media_data or not media_data.get('is_video'):
-                return None
-            
-            video_url = media_data.get('video_url')
-            if not video_url:
-                return None
-            
-            dimensions = media_data.get('dimensions', {})
-            
-            return {
-                'video_url': video_url,
-                'width': str(dimensions.get('width', 640)),
-                'height': str(dimensions.get('height', 640)),
-                'thumbnail': media_data.get('display_url')
-            }
-            
-        except Exception as e:
-            logger.error(f"GraphQL error: {e}")
-            return None
-    
-    async def _get_instagram_webpage(self, post_id: str) -> Optional[Dict[str, str]]:
-        """Get Instagram video from webpage meta tags"""
-        try:
-            import requests
-            
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Cache-Control': 'max-age=0',
-            }
-            
-            # Try both /p/ and /reel/ URLs
-            urls_to_try = [
-                f"https://www.instagram.com/p/{post_id}/",
-                f"https://www.instagram.com/reel/{post_id}/"
-            ]
-            
-            loop = asyncio.get_event_loop()
-            
-            for url in urls_to_try:
-                try:
-                    response = await loop.run_in_executor(
-                        None,
-                        lambda u=url: requests.get(u, headers=headers, timeout=30, allow_redirects=True)
-                    )
-                    
-                    if response.status_code != 200:
-                        continue
-                    
-                    html = response.text
-                    
-                    # Extract video URL from meta tag
-                    video_match = re.search(r'<meta property="og:video" content="([^"]+)"', html)
-                    if video_match:
-                        video_url = video_match.group(1)
-                        
-                        # Extract dimensions
-                        width_match = re.search(r'<meta property="og:video:width" content="([^"]+)"', html)
-                        height_match = re.search(r'<meta property="og:video:height" content="([^"]+)"', html)
-                        thumb_match = re.search(r'<meta property="og:image" content="([^"]+)"', html)
-                        
-                        logger.info(f"Successfully extracted video from webpage: {url}")
-                        return {
-                            'video_url': video_url,
-                            'width': width_match.group(1) if width_match else '640',
-                            'height': height_match.group(1) if height_match else '640',
-                            'thumbnail': thumb_match.group(1) if thumb_match else None
-                        }
-                except Exception as e:
-                    logger.debug(f"Failed to fetch {url}: {e}")
-                    continue
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Webpage scraping error: {e}")
-            return None
     
     async def _process_video(self, result: DownloadResult, quality: str,
                             progress_callback=None) -> DownloadResult:
