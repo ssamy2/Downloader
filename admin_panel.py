@@ -20,11 +20,16 @@ from config import config, messages
 from database import db
 from broadcast_system import broadcast_router, BroadcastStates
 from settings_system import settings_router, SettingsStates
+from instagram_settings import router as instagram_router
 
 logger = logging.getLogger(__name__)
 
 admin_router = Router()
 
+# Include routers
+admin_router.include_router(broadcast_router)
+admin_router.include_router(settings_router)
+admin_router.include_router(instagram_router)
 
 class AdminStates(StatesGroup):
     """Admin panel states"""
@@ -96,11 +101,9 @@ def get_users_menu() -> InlineKeyboardMarkup:
 def get_settings_menu(user_id: int) -> InlineKeyboardMarkup:
     """Settings menu"""
     buttons = [
-        [InlineKeyboardButton(text="👑 إدارة المسؤولين", callback_data="admin_settings:admins")]
+        [InlineKeyboardButton(text="👑 إدارة المسؤولين", callback_data="admin_settings:admins")],
+        [InlineKeyboardButton(text="📸 إعدادات Instagram", callback_data="admin_settings:instagram")]
     ]
-    
-    if is_owner(user_id):
-        buttons.append([InlineKeyboardButton(text="🔐 إعدادات أمان", callback_data="admin_settings:security")])
     
     buttons.append([InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_menu:back")])
     
@@ -684,6 +687,29 @@ async def manage_admins(callback: CallbackQuery):
 """
     
     await callback.message.edit_text(text, reply_markup=get_back_button(), parse_mode="HTML")
+
+
+@admin_router.callback_query(F.data == "admin_settings:instagram")
+async def instagram_settings(callback: CallbackQuery, state: FSMContext):
+    """Instagram download settings"""
+    text = """
+📸 <b>إعدادات تحميل Instagram</b>
+
+⚙️ اختر الإعداد الذي تريد تعديله:
+"""
+    
+    buttons = [
+        [InlineKeyboardButton(text="📝 رفع ملف الكوكيز", callback_data="instagram:upload_cookies")],
+        [InlineKeyboardButton(text="🔢 تحديد أولوية التحميل", callback_data="instagram:set_priority")],
+        [InlineKeyboardButton(text="⏱️ اختبار التحميل", callback_data="instagram:test_download")],
+        [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_menu:settings")]
+    ]
+    
+    await callback.message.edit_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+        parse_mode="HTML"
+    )
 
 
 # ==================== Admin Commands ====================

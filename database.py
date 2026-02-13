@@ -78,6 +78,7 @@ class Database:
             
             # Auto-migrate: add permission columns if they don't exist
             await self._auto_migrate_permissions()
+            await self._auto_migrate_channels()
             
             # Downloads log table
             await self._connection.execute("""
@@ -108,9 +109,13 @@ class Database:
                 CREATE TABLE IF NOT EXISTS required_channels (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     channel_username TEXT UNIQUE,
+                    channel_id INTEGER,
                     channel_title TEXT,
+                    is_private INTEGER DEFAULT 0,
+                    is_valid INTEGER DEFAULT 1,
                     added_by INTEGER,
-                    added_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    added_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    last_checked TEXT
                 )
             """)
             
@@ -151,7 +156,44 @@ class Database:
             
             await self._connection.commit()
         except Exception as e:
-            logger.error(f"Auto-migration error: {e}")
+            logger.error(f"Error during permissions migration: {e}")
+    
+    async def _auto_migrate_channels(self) -> None:
+        """Auto-migrate database to add channel columns if missing"""
+        try:
+            # Check if columns exist in required_channels table
+            cursor = await self._connection.execute("PRAGMA table_info(required_channels)")
+            columns = [row[1] for row in await cursor.fetchall()]
+            
+            # Add missing channel columns
+            if 'channel_id' not in columns:
+                await self._connection.execute("ALTER TABLE required_channels ADD COLUMN channel_id INTEGER")
+                logger.info("Added 'channel_id' column to required_channels table")
+            
+            if 'is_private' not in columns:
+                await self._connection.execute("ALTER TABLE required_channels ADD COLUMN is_private INTEGER DEFAULT 0")
+                logger.info("Added 'is_private' column to required_channels table")
+            
+            if 'is_valid' not in columns:
+                await self._connection.execute("ALTER TABLE required_channels ADD COLUMN is_valid INTEGER DEFAULT 1")
+                logger.info("Added 'is_valid' column to required_channels table")
+            
+            if 'last_checked' not in columns:
+                await self._connection.execute("ALTER TABLE required_channels ADD COLUMN last_checked TEXT")
+                logger.info("Added 'last_checked' column to required_channels table")
+            
+            if 'invite_link' not in columns:
+                await self._connection.execute("ALTER TABLE required_channels ADD COLUMN invite_link TEXT")
+                logger.info("Added 'invite_link' column to required_channels table")
+                
+            # Update existing channels to be valid by default
+            if 'is_valid' in columns:
+                await self._connection.execute(
+                    "UPDATE required_channels SET is_valid = 1 WHERE is_valid IS NULL"
+                )
+                
+        except Exception as e:
+            logger.error(f"Error during channels migration: {e}")
     
     # ==================== User Management ====================
     
@@ -439,28 +481,30 @@ class Database:
     # ==================== Required Channels ====================
     
     async def add_required_channel(self, channel_username: str, 
-                                   channel_title: str, added_by: int) -> bool:
+                                   channel_title: str, added_by: int,
+                                   channel_id: int = None, is_private: bool = False,
+                                   invite_link: str = None) -> bool:
         """Add a required channel"""
         async with self._lock:
             try:
                 await self._connection.execute("""
                     INSERT OR REPLACE INTO required_channels 
-                    (channel_username, channel_title, added_by, added_at)
-                    VALUES (?, ?, ?, ?)
-                """, (channel_username, channel_title, added_by, datetime.now().isoformat()))
+                    (channel_username, channel_id, channel_title, is_private, is_valid, added_by, added_at, last_checked, invite_link)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (channel_username, channel_id, channel_title, int(is_private), 1, added_by, datetime.now().isoformat(), datetime.now().isoformat(), invite_link))
                 await self._connection.commit()
                 return True
             except Exception as e:
                 logger.error(f"Error adding channel: {e}")
                 return False
     
-    async def remove_required_channel(self, channel_username: str) -> bool:
-        """Remove a required channel"""
+    async def remove_required_channel(self, channel_id: int) -> bool:
+        """Remove a required channel by channel_id"""
         async with self._lock:
             try:
                 await self._connection.execute(
-                    "DELETE FROM required_channels WHERE channel_username = ?",
-                    (channel_username,)
+                    "DELETE FROM required_channels WHERE channel_id = ?",
+                    (channel_id,)
                 )
                 await self._connection.commit()
                 return True
@@ -468,14 +512,74 @@ class Database:
                 logger.error(f"Error removing channel: {e}")
                 return False
     
-    async def get_required_channels(self) -> List[Dict[str, str]]:
+    async def get_channel_by_id(self, channel_id: int) -> Optional[Dict[str, any]]:
+        """Get channel info by ID"""
+        async with self._lock:
+            cursor = await self._connection.execute(
+                "SELECT channel_username, channel_id, channel_title, is_private, is_valid FROM required_channels WHERE channel_id = ?",
+                (channel_id,)
+            )
+            row = await cursor.fetchone()
+            if row:
+                return {
+                    'username': row[0],
+                    'channel_id': row[1],
+                    'title': row[2],
+                    'is_private': bool(row[3]),
+                    'is_valid': bool(row[4])
+                }
+            return None
+    
+    async def get_required_channels(self) -> List[Dict[str, any]]:
         """Get all required channels"""
         async with self._lock:
             cursor = await self._connection.execute(
-                "SELECT channel_username, channel_title FROM required_channels"
+                "SELECT channel_username, channel_id, channel_title, is_private, is_valid, invite_link FROM required_channels"
             )
             rows = await cursor.fetchall()
-            return [{'username': row[0], 'title': row[1]} for row in rows]
+            return [{
+                'username': row[0], 
+                'channel_id': row[1],
+                'title': row[2],
+                'is_private': bool(row[3]),
+                'is_valid': bool(row[4]),
+                'invite_link': row[5]
+            } for row in rows]
+    
+    async def update_channel_status(self, channel_username: str, 
+                                   channel_id: int = None,
+                                   is_private: bool = None,
+                                   is_valid: bool = None) -> bool:
+        """Update channel status (private/public, valid/invalid)"""
+        async with self._lock:
+            try:
+                updates = []
+                params = []
+                
+                if channel_id is not None:
+                    updates.append("channel_id = ?")
+                    params.append(channel_id)
+                
+                if is_private is not None:
+                    updates.append("is_private = ?")
+                    params.append(int(is_private))
+                
+                if is_valid is not None:
+                    updates.append("is_valid = ?")
+                    params.append(int(is_valid))
+                
+                updates.append("last_checked = ?")
+                params.append(datetime.now().isoformat())
+                
+                params.append(channel_username)
+                
+                query = f"UPDATE required_channels SET {', '.join(updates)} WHERE channel_username = ?"
+                await self._connection.execute(query, params)
+                await self._connection.commit()
+                return True
+            except Exception as e:
+                logger.error(f"Error updating channel status: {e}")
+                return False
     
     # ==================== Settings ====================
     

@@ -32,6 +32,7 @@ class DownloadResult:
     title: str = ""
     error: Optional[str] = None
     thumbnail: Optional[str] = None
+    method: Optional[str] = None
 
 
 class MediaDownloader:
@@ -107,7 +108,7 @@ class MediaDownloader:
         
         # Try Instagram scraper for Instagram (bypasses rate limits)
         if platform == 'instagram':
-            result = await self._download_instagram_scraper(url, quality, progress_callback, download_audio)
+            result = await self._download_instagram(url, quality, progress_callback, download_audio)
             if result.success:
                 return result
             logger.warning("Instagram scraper failed, falling back to yt-dlp")
@@ -121,70 +122,39 @@ class MediaDownloader:
         
         return result
     
-    async def _download_instagram_scraper(self, url: str, quality: str,
-                                          progress_callback=None, download_audio: bool = False) -> DownloadResult:
-        """Download Instagram video using browser automation"""
-        try:
-            from instagram_browser_scraper import get_browser_manager
-            
-            if progress_callback:
-                await progress_callback("connecting", 10)
-            
-            # Get browser manager
-            manager = await get_browser_manager()
-            
-            # Generate temp file path
-            temp_file = os.path.join(
-                tempfile.gettempdir(),
-                f"instagram_{os.urandom(8).hex()}.mp4"
-            )
-            
-            # Download using browser automation
-            success = await manager.download_instagram(url, temp_file, progress_callback)
-            
-            if not success or not os.path.exists(temp_file):
-                raise Exception("Browser scraper failed to download video")
-            
-            # Move to final location
-            ext = "mp3" if download_audio else "mp4"
-            filename = self._generate_filename(url, ext)
-            file_path = os.path.join(self.download_dir, filename)
-            
-            # Move temp file to final location
-            import shutil
-            shutil.move(temp_file, file_path)
-            
-            file_size = os.path.getsize(file_path)
-            
-            # Convert to audio if requested
-            if download_audio:
-                audio_path = await self._extract_audio(file_path)
-                if audio_path:
-                    os.remove(file_path)
-                    file_path = audio_path
-                    file_size = os.path.getsize(file_path)
-            
-            if progress_callback:
-                await progress_callback("downloaded", 100)
-            
-            logger.info(f"Instagram download successful: {file_size / 1024 / 1024:.2f} MB")
-            
-            return DownloadResult(
-                success=True,
-                file_path=file_path,
-                file_size=file_size,
-                platform='instagram',
-                title='',
-                thumbnail=None
-            )
-            
-        except Exception as e:
-            logger.error(f"Instagram download error: {e}")
-            return DownloadResult(
-                success=False,
-                error=str(e),
-                platform='instagram'
-            )
+    async def _download_instagram(self, url: str, quality: str, progress_callback=None, download_audio: bool = False) -> DownloadResult:
+        """Download Instagram media with priority system"""
+        from instagram_settings import settings as insta_settings
+        
+        methods = {
+            "yt_dlp": self._download_with_ytdlp,
+            "cobalt": self._download_with_cobalt
+        }
+        
+        last_error = None
+        
+        for method in insta_settings.priority:
+            try:
+                if method not in methods:
+                    continue
+                    
+                if method == "yt_dlp":
+                    result = await methods[method](url, quality, "instagram", progress_callback, download_audio)
+                else:
+                    result = await methods[method](url, quality, "instagram", progress_callback)
+                if result.success:
+                    result.method = method
+                    return result
+                    
+            except Exception as e:
+                last_error = str(e)
+                logger.error(f"Instagram {method} download failed: {e}")
+        
+        return DownloadResult(
+            success=False,
+            error=last_error or "فشل جميع طرق التحميل",
+            platform="instagram"
+        )
     
     async def _download_tiktok_api(self, url: str, quality: str, 
                                    progress_callback=None, download_audio: bool = False) -> DownloadResult:
@@ -427,6 +397,15 @@ class MediaDownloader:
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
             }
             
+            # Add cookies for Instagram if available (automatic)
+            if platform == 'instagram':
+                cookies_file = "cookies.txt"
+                if os.path.exists(cookies_file):
+                    ydl_opts['cookiefile'] = cookies_file
+                    logger.info(f"🍪 Using cookies file: {cookies_file}")
+                else:
+                    logger.info("🔍 No cookies file found, continuing without cookies")
+            
             # Audio-only download
             if download_audio:
                 ydl_opts['format'] = 'bestaudio/best'
@@ -486,15 +465,6 @@ class MediaDownloader:
             if not actual_path or not os.path.exists(actual_path):
                 raise Exception("Downloaded file not found on disk")
             
-            # Convert to mp4 if needed (video only)
-            if not download_audio and not actual_path.endswith('.mp4'):
-                new_path = actual_path.rsplit('.', 1)[0] + '.mp4'
-                converted = await self._convert_to_mp4(actual_path, new_path)
-                if converted:
-                    if os.path.exists(actual_path) and actual_path != new_path:
-                        os.remove(actual_path)
-                    actual_path = new_path
-            
             duration = (datetime.now() - start_time).total_seconds()
             file_size = os.path.getsize(actual_path)
             
@@ -508,7 +478,8 @@ class MediaDownloader:
                 duration=duration,
                 platform=platform,
                 title=info.get('title', ''),
-                thumbnail=info.get('thumbnail')
+                thumbnail=info.get('thumbnail'),
+                method='yt_dlp'
             )
             
         except Exception as e:
@@ -680,6 +651,127 @@ class MediaDownloader:
                 return f"{size_bytes:.1f} {unit}"
             size_bytes /= 1024
         return f"{size_bytes:.1f} TB"
+    
+    async def apply_audio_metadata(
+        self, 
+        file_path: str,
+        artist: str = '',
+        title: str = '',
+        description: str = '',
+        thumbnail: str = None
+    ) -> DownloadResult:
+        """Apply metadata to audio file using FFmpeg
+        
+        Args:
+            file_path: Path to the audio file
+            artist: Artist/performer name
+            title: Track title
+            description: Track description/comment
+            thumbnail: Path to thumbnail image
+        
+        Returns:
+            DownloadResult with updated file info
+        """
+        try:
+            # Create output path
+            base_name = os.path.splitext(file_path)[0]
+            output_path = f"{base_name}_meta.mp3"
+            
+            # Build FFmpeg command
+            cmd = [config.FFMPEG_PATH, '-i', file_path]
+            
+            # Add thumbnail if provided
+            if thumbnail and os.path.exists(thumbnail):
+                cmd.extend(['-i', thumbnail])
+            
+            # Build metadata
+            metadata = []
+            if artist:
+                metadata.extend(['-metadata', f'artist={artist}'])
+            if title:
+                metadata.extend(['-metadata', f'title={title}'])
+            if description:
+                metadata.extend(['-metadata', f'comment={description}'])
+            
+            cmd.extend(metadata)
+            
+            # Audio codec settings
+            cmd.extend(['-acodec', 'libmp3lame', '-ab', '192k'])
+            
+            # Add thumbnail mapping if provided
+            if thumbnail and os.path.exists(thumbnail):
+                cmd.extend([
+                    '-map', '0:a',
+                    '-map', '1:v',
+                    '-c:v', 'mjpeg',
+                    '-disposition:v', 'attached_pic'
+                ])
+            
+            cmd.extend(['-y', output_path])
+            
+            # Run FFmpeg
+            loop = asyncio.get_event_loop()
+            process = await loop.run_in_executor(
+                None,
+                lambda: subprocess.run(cmd, capture_output=True, timeout=300)
+            )
+            
+            if process.returncode == 0 and os.path.exists(output_path):
+                # Remove original file
+                os.remove(file_path)
+                
+                # Rename new file to original name if title specified
+                if title:
+                    final_path = os.path.join(
+                        os.path.dirname(output_path),
+                        f"{title}.mp3"
+                    )
+                    # Clean filename from invalid characters
+                    final_path = re.sub(r'[<>:"/\\|?*]', '_', final_path)
+                else:
+                    final_path = file_path
+                
+                # Rename output to final path
+                if final_path != output_path:
+                    try:
+                        os.rename(output_path, final_path)
+                    except:
+                        final_path = output_path
+                else:
+                    os.rename(output_path, file_path)
+                    final_path = file_path
+                
+                file_size = os.path.getsize(final_path)
+                
+                return DownloadResult(
+                    success=True,
+                    file_path=final_path,
+                    file_size=file_size,
+                    platform='audio_custom',
+                    title=title or ''
+                )
+            else:
+                # FFmpeg failed, return original file
+                logger.warning(f"FFmpeg metadata failed: {process.stderr.decode()[:200]}")
+                file_size = os.path.getsize(file_path)
+                return DownloadResult(
+                    success=True,
+                    file_path=file_path,
+                    file_size=file_size,
+                    platform='audio_custom'
+                )
+                
+        except Exception as e:
+            logger.error(f"Error applying audio metadata: {e}")
+            # Return original file on error
+            file_size = os.path.getsize(file_path) if os.path.exists(file_path) else 0
+            return DownloadResult(
+                success=True,
+                file_path=file_path,
+                file_size=file_size,
+                platform='audio_custom',
+                error=str(e)
+            )
 
 
 class FileCleanupScheduler:

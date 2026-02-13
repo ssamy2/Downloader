@@ -8,7 +8,7 @@ from typing import List
 @dataclass
 class BotConfig:
     """Bot configuration settings"""
-    TOKEN: str = "7824907627:AAGKWiS-fCIYlZPj6JGt3uwv9AD2J1L6meY"
+    TOKEN: str = "7824907627:AAGqW0hw4Ckysz35hbIwl0HYk3SlnWZpNlM"
     
     # Cobalt API Settings
     COBALT_API_URL: str = "https://api.cobalt.tools/api/json"  # Updated API endpoint
@@ -151,6 +151,7 @@ URL_PATTERNS = {
     'instagram': r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel|reels|stories|tv)/[\w-]+/?',
     'tiktok': r'(?:https?://)?(?:www\.|vm\.|vt\.)?tiktok\.com/[\w@/.-]+',
     'youtube': r'(?:https?://)?(?:www\.)?(?:youtube\.com/(?:watch\?v=|shorts/)|youtu\.be/)[\w-]+',
+    'facebook': r'(?:https?://)?(?:www\.)?(?:facebook\.com|fb\.me)/(?:share/|video/|reel/|v/|watch/)[\w-]+/?',
     'twitter': r'(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/\w+/status/\d+',
     'kwai': r'(?:https?://)?(?:www\.)?(?:kwai\.com|kw\.ai)/[\w@/.-]+'
 }

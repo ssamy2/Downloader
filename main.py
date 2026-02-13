@@ -17,6 +17,8 @@ from aiogram.types import (
 )
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode, ChatMemberStatus
 import json
@@ -162,7 +164,7 @@ def run_auto_setup():
     
     print("✅ All dependencies ready!")
     return True
-
+                                     
 # Run auto-setup before importing other modules
 if not run_auto_setup():
     print("❌ Setup failed. Please install dependencies manually.")
@@ -191,6 +193,14 @@ logger = logging.getLogger(__name__)
 user_cooldowns: Dict[int, datetime] = {}
 # Pending downloads tracking
 pending_downloads: Dict[int, Dict] = {}
+
+
+class AudioSettingsStates(StatesGroup):
+    """States for audio settings"""
+    waiting_artist_name = State()
+    waiting_file_name = State()
+    waiting_file_description = State()
+    waiting_thumbnail = State()
 
 
 def create_progress_bar(percent: int, length: int = 10) -> str:
@@ -302,45 +312,114 @@ def get_quality_keyboard(url: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="🎵 تحميل صوتي فقط", callback_data=f"dl:audio")
         ],
         [
+            InlineKeyboardButton(text="🎵 تحميل صوت (بصمة)", callback_data=f"dl:audio_custom")
+        ],
+        [
             InlineKeyboardButton(text="❌ إلغاء", callback_data="dl:cancel")
         ]
     ])
 
 
-def get_subscribe_keyboard(channels: list) -> InlineKeyboardMarkup:
-    """Create subscription check keyboard"""
+async def get_subscribe_keyboard(channels: list, bot: Bot = None) -> InlineKeyboardMarkup:
+    """Create subscription check keyboard with support for private channels"""
     buttons = []
     for ch in channels:
-        buttons.append([
-            InlineKeyboardButton(
-                text=f"📢 {ch['title'] or ch['username']}", 
-                url=f"https://t.me/{ch['username']}"
-            )
-        ])
+        try:
+            url = None
+            
+            # أولاً: استخدم رابط الدعوة المحفوظ إذا كان موجوداً
+            if ch.get('invite_link'):
+                url = ch['invite_link']
+            # ثانياً: للقنوات الخاصة بدون رابط محفوظ، أنشئ رابط جديد
+            elif (ch.get('is_private') or not ch.get('username')) and bot and ch.get('channel_id'):
+                try:
+                    invite_link = await bot.create_chat_invite_link(ch['channel_id'])
+                    url = invite_link.invite_link
+                except Exception as e:
+                    logger.warning(f"Could not create invite link for {ch.get('channel_id')}: {e}")
+            # ثالثاً: للقنوات العامة بـ username صالح
+            elif ch.get('username') and ch['username'] != 'None' and not ch['username'].startswith('channel_'):
+                url = f"https://t.me/{ch['username']}"
+            
+            if url:
+                buttons.append([
+                    InlineKeyboardButton(
+                        text=f"📢 {ch.get('title') or 'قناة'}", 
+                        url=url
+                    )
+                ])
+        except Exception as e:
+            logger.warning(f"Error creating button for channel {ch.get('channel_id')}: {e}")
+            continue
+    
     buttons.append([
         InlineKeyboardButton(text="✅ تحقق", callback_data="check_sub")
     ])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def check_subscription(bot: Bot, user_id: int) -> tuple[bool, list]:
-    """Check if user is subscribed to all required channels"""
+async def check_subscription(bot: Bot, user_id: int) -> tuple[bool, list, list]:
+    """Check if user is subscribed to all required channels
+    
+    Returns:
+        tuple: (is_subscribed, not_subscribed_channels, invalid_channels)
+    """
     channels = await db.get_required_channels()
     if not channels:
-        return True, []
+        return True, [], []
     
     not_subscribed = []
+    invalid_channels = []
+    
     for channel in channels:
+        # تجاهل القنوات بدون channel_id (لا يمكن التحقق منها)
+        if not channel.get('channel_id'):
+            invalid_channels.append(channel)
+            logger.warning(f"Channel without ID in database: {channel}")
+            continue
+        
         try:
-            member = await bot.get_chat_member(f"@{channel['username']}", user_id)
-            if member.status in [ChatMemberStatus.LEFT, ChatMemberStatus.KICKED]:
+            chat_id = channel['channel_id']
+            
+            # محاولة الوصول للقناة - استخدم channel_id مباشرة
+            try:
+                chat = await bot.get_chat(chat_id)
+            except Exception as e:
+                logger.warning(f"Cannot access channel {chat_id}: {e}")
+                invalid_channels.append(channel)
+                continue
+            
+            # التحقق من أن البوت أدمن في القناة
+            try:
+                bot_member = await bot.get_chat_member(chat_id, bot.id)
+                if bot_member.status not in ['administrator', 'creator']:
+                    logger.warning(f"Bot is not admin in channel {chat_id}")
+                    invalid_channels.append(channel)
+                    continue
+            except Exception as e:
+                logger.warning(f"Cannot check bot admin status: {e}")
+                invalid_channels.append(channel)
+                continue
+            
+            # التحقق من اشتراك المستخدم
+            try:
+                member = await bot.get_chat_member(chat_id, user_id)
+                if member.status in [ChatMemberStatus.LEFT, ChatMemberStatus.KICKED]:
+                    not_subscribed.append(channel)
+            except Exception as e:
+                logger.warning(f"Error checking subscription: {e}")
                 not_subscribed.append(channel)
+                
         except Exception as e:
-            logger.warning(f"Error checking subscription for {channel['username']}: {e}")
-            # If we can't check, assume not subscribed
+            logger.error(f"Error checking channel {channel.get('channel_id')}: {e}")
             not_subscribed.append(channel)
     
-    return len(not_subscribed) == 0, not_subscribed
+    # إذا كانت كل القنوات غير صالحة، نسمح للمستخدم بالمرور
+    if len(invalid_channels) == len(channels):
+        logger.info("All channels are invalid, allowing user access")
+        return True, [], invalid_channels
+    
+    return len(not_subscribed) == 0, not_subscribed, invalid_channels
 
 
 async def check_user_access(message: Message, bot: Bot) -> bool:
@@ -364,12 +443,17 @@ async def check_user_access(message: Message, bot: Bot) -> bool:
         return False
     
     # Check subscription
-    is_subscribed, not_subbed = await check_subscription(bot, user_id)
-    if not is_subscribed:
-        channels_text = "\n".join([f"• @{ch['username']}" for ch in not_subbed])
+    is_subscribed, not_subbed, invalid_channels = await check_subscription(bot, user_id)
+    
+    # عرض القنوات التي لم يشترك فيها المستخدم (لها channel_id)
+    valid_not_subbed = [ch for ch in not_subbed if ch.get('channel_id')]
+    
+    if not is_subscribed and valid_not_subbed:
+        # بناء نص القنوات - استخدم العنوان بدلاً من username
+        channels_text = "\n".join([f"• {ch.get('title') or 'قناة'}" for ch in valid_not_subbed])
         await message.answer(
             messages.ERROR_SUBSCRIBE.format(channels=channels_text),
-            reply_markup=get_subscribe_keyboard(not_subbed),
+            reply_markup=await get_subscribe_keyboard(valid_not_subbed, bot),
             parse_mode="HTML"
         )
         return False
@@ -407,7 +491,8 @@ async def process_download(
     url: str, 
     quality: str,
     status_message: Message,
-    download_audio: bool = False
+    download_audio: bool = False,
+    platform: str = None
 ) -> None:
     """Process a download request"""
     start_time = datetime.now()
@@ -457,9 +542,14 @@ async def process_download(
             time=f"{duration:.1f}"
         )
         
+        # Check if Twitter - add warning message
+        is_twitter = platform and 'twitter' in platform.lower()
+        if is_twitter:
+            caption += "\n\n⚠️ <b>تنبيه:</b> هذه الرسالة ستُحذف بعد 30 ثانية\n💾 يرجى حفظها في السيفد مسدجس"
+        
         if download_audio:
             # Send as audio file
-            await bot.send_audio(
+            sent_msg = await bot.send_audio(
                 chat_id=chat_id,
                 audio=file_obj,
                 caption=caption,
@@ -467,7 +557,7 @@ async def process_download(
             )
         else:
             # Send as video
-            await bot.send_video(
+            sent_msg = await bot.send_video(
                 chat_id=chat_id,
                 video=file_obj,
                 caption=caption,
@@ -477,6 +567,17 @@ async def process_download(
         
         # Delete status message
         await status_message.delete()
+        
+        # Schedule deletion for Twitter videos after 30 seconds
+        if is_twitter:
+            async def delete_twitter_message():
+                try:
+                    await asyncio.sleep(30)
+                    await bot.delete_message(chat_id, sent_msg.message_id)
+                except:
+                    pass
+            
+            asyncio.create_task(delete_twitter_message())
         
         # Update user stats
         await db.increment_download(user_id)
@@ -643,22 +744,78 @@ async def handle_url_message(message: Message, bot: Bot):
         )
 
 
+def get_audio_settings_keyboard() -> InlineKeyboardMarkup:
+    """Create audio settings keyboard"""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎤 تغيير اسم الفنان", callback_data="audio_set:artist")],
+        [InlineKeyboardButton(text="🖼 تغيير الصورة المصغرة", callback_data="audio_set:thumbnail")],
+        [InlineKeyboardButton(text="📝 تغيير اسم الملف", callback_data="audio_set:filename")],
+        [InlineKeyboardButton(text="📄 تغيير وصف الملف", callback_data="audio_set:description")],
+        [InlineKeyboardButton(text="⬇️ تحميل بالإعدادات الحالية", callback_data="audio_set:download")],
+        [InlineKeyboardButton(text="🚀 متابعة بدون إعدادات", callback_data="audio_set:skip")],
+        [InlineKeyboardButton(text="❌ إلغاء", callback_data="dl:cancel")]
+    ])
+
+
+def get_audio_settings_text(settings: dict) -> str:
+    """Generate audio settings display text"""
+    artist = settings.get('artist', 'غير محدد')
+    filename = settings.get('filename', 'غير محدد')
+    description = settings.get('description', 'غير محدد')
+    has_thumbnail = '✅' if settings.get('thumbnail') else '❌'
+    
+    return f"""
+🎵 <b>إعدادات الصوت (بصمة)</b>
+
+<b>الإعدادات الحالية:</b>
+🎤 <b>اسم الفنان:</b> {artist}
+📝 <b>اسم الملف:</b> {filename}
+📄 <b>الوصف:</b> {description}
+🖼 <b>صورة مصغرة:</b> {has_thumbnail}
+
+<i>اختر الإعداد لتعديله أو تابع التحميل:</i>
+"""
+
+
 @main_router.callback_query(F.data.startswith("dl:"))
-async def quality_callback(callback: CallbackQuery, bot: Bot):
+async def quality_callback(callback: CallbackQuery, bot: Bot, state: FSMContext):
     """Handle quality selection"""
     user_id = callback.from_user.id
     action = callback.data.split(":")[1]
     
     if action == "cancel":
         pending_downloads.pop(user_id, None)
+        await state.clear()
         await callback.message.delete()
         return
     
-    # Get pending download
-    pending = pending_downloads.pop(user_id, None)
+    # Get pending download - don't pop for audio_custom
+    if action == "audio_custom":
+        pending = pending_downloads.get(user_id, None)
+    else:
+        pending = pending_downloads.pop(user_id, None)
+    
     if not pending:
         await callback.answer("⏰ انتهت الصلاحية، أرسل الرابط مرة أخرى", show_alert=True)
         await callback.message.delete()
+        return
+    
+    # Handle audio with custom settings
+    if action == "audio_custom":
+        # Initialize audio settings
+        audio_settings = {
+            'artist': '',
+            'filename': '',
+            'description': '',
+            'thumbnail': None
+        }
+        await state.update_data(audio_settings=audio_settings)
+        
+        await callback.message.edit_text(
+            get_audio_settings_text(audio_settings),
+            reply_markup=get_audio_settings_keyboard(),
+            parse_mode="HTML"
+        )
         return
     
     # Check if audio download
@@ -668,6 +825,7 @@ async def quality_callback(callback: CallbackQuery, bot: Bot):
     # Handle single URL
     if 'url' in pending:
         url = pending['url']
+        platform = pending.get('platform', 'unknown')
         
         # Update message to processing status
         status_text = "🎵 <b>جاري تحميل الصوت...</b>" if download_audio else messages.PROCESSING
@@ -677,7 +835,6 @@ async def quality_callback(callback: CallbackQuery, bot: Bot):
         )
         
         # Notify about download
-        platform = pending.get('platform', 'unknown')
         await notify_download(bot, user_id, url, platform)
         
         # Process download
@@ -688,7 +845,8 @@ async def quality_callback(callback: CallbackQuery, bot: Bot):
             url=url,
             quality=quality,
             status_message=status_msg,
-            download_audio=download_audio
+            download_audio=download_audio,
+            platform=platform
         )
     
     # Handle batch URLs
@@ -736,22 +894,329 @@ async def check_subscription_callback(callback: CallbackQuery, bot: Bot):
     """Handle subscription check button"""
     user_id = callback.from_user.id
     
-    is_subscribed, not_subbed = await check_subscription(bot, user_id)
+    is_subscribed, not_subbed, invalid_channels = await check_subscription(bot, user_id)
     
-    if is_subscribed:
+    # عرض القنوات التي لها channel_id
+    valid_not_subbed = [ch for ch in not_subbed if ch.get('channel_id')]
+    
+    if is_subscribed or not valid_not_subbed:
         await callback.answer("✅ تم التحقق! يمكنك استخدام البوت الآن", show_alert=True)
         await callback.message.delete()
     else:
-        channels_text = "\n".join([f"• @{ch['username']}" for ch in not_subbed])
+        channels_text = "\n".join([f"• {ch.get('title') or 'قناة'}" for ch in valid_not_subbed])
         await callback.answer(
             "❌ لم يتم الاشتراك في جميع القنوات بعد",
             show_alert=True
         )
         await callback.message.edit_text(
             messages.ERROR_SUBSCRIBE.format(channels=channels_text),
-            reply_markup=get_subscribe_keyboard(not_subbed),
+            reply_markup=await get_subscribe_keyboard(valid_not_subbed, bot),
             parse_mode="HTML"
         )
+
+
+# ==================== Audio Settings Handlers ====================
+
+@main_router.callback_query(F.data.startswith("audio_set:"))
+async def audio_settings_callback(callback: CallbackQuery, bot: Bot, state: FSMContext):
+    """Handle audio settings callbacks"""
+    user_id = callback.from_user.id
+    action = callback.data.split(":")[1]
+    
+    # Get current state data
+    state_data = await state.get_data()
+    audio_settings = state_data.get('audio_settings', {})
+    
+    if action == "artist":
+        await callback.message.edit_text(
+            "🎤 <b>تغيير اسم الفنان</b>\n\nأرسل اسم الفنان المطلوب:",
+            parse_mode="HTML"
+        )
+        await state.set_state(AudioSettingsStates.waiting_artist_name)
+        
+    elif action == "filename":
+        await callback.message.edit_text(
+            "📝 <b>تغيير اسم الملف</b>\n\nأرسل اسم الملف المطلوب (بدون امتداد):",
+            parse_mode="HTML"
+        )
+        await state.set_state(AudioSettingsStates.waiting_file_name)
+        
+    elif action == "description":
+        await callback.message.edit_text(
+            "📄 <b>تغيير وصف الملف</b>\n\nأرسل وصف الملف المطلوب:",
+            parse_mode="HTML"
+        )
+        await state.set_state(AudioSettingsStates.waiting_file_description)
+        
+    elif action == "thumbnail":
+        await callback.message.edit_text(
+            "🖼 <b>تغيير الصورة المصغرة</b>\n\nأرسل الصورة المطلوبة:",
+            parse_mode="HTML"
+        )
+        await state.set_state(AudioSettingsStates.waiting_thumbnail)
+        
+    elif action == "download" or action == "skip":
+        # Start download with settings
+        pending = pending_downloads.pop(user_id, None)
+        if not pending:
+            await callback.answer("⏰ انتهت الصلاحية، أرسل الرابط مرة أخرى", show_alert=True)
+            await state.clear()
+            await callback.message.delete()
+            return
+        
+        url = pending.get('url')
+        platform = pending.get('platform', 'unknown')
+        
+        status_msg = await callback.message.edit_text(
+            "🎵 <b>جاري تحميل ومعالجة الصوت...</b>",
+            parse_mode="HTML"
+        )
+        
+        # Notify about download
+        await notify_download(bot, user_id, url, platform)
+        
+        # Process download with custom settings
+        await process_audio_download(
+            bot=bot,
+            chat_id=callback.message.chat.id,
+            user_id=user_id,
+            url=url,
+            status_message=status_msg,
+            audio_settings=audio_settings if action == "download" else {}
+        )
+        
+        await state.clear()
+
+
+@main_router.message(AudioSettingsStates.waiting_artist_name)
+async def process_artist_name(message: Message, state: FSMContext):
+    """Process artist name input"""
+    state_data = await state.get_data()
+    audio_settings = state_data.get('audio_settings', {})
+    audio_settings['artist'] = message.text.strip()
+    await state.update_data(audio_settings=audio_settings)
+    
+    await message.answer(
+        get_audio_settings_text(audio_settings),
+        reply_markup=get_audio_settings_keyboard(),
+        parse_mode="HTML"
+    )
+    await state.set_state(None)
+
+
+@main_router.message(AudioSettingsStates.waiting_file_name)
+async def process_file_name(message: Message, state: FSMContext):
+    """Process file name input"""
+    state_data = await state.get_data()
+    audio_settings = state_data.get('audio_settings', {})
+    audio_settings['filename'] = message.text.strip()
+    await state.update_data(audio_settings=audio_settings)
+    
+    await message.answer(
+        get_audio_settings_text(audio_settings),
+        reply_markup=get_audio_settings_keyboard(),
+        parse_mode="HTML"
+    )
+    await state.set_state(None)
+
+
+@main_router.message(AudioSettingsStates.waiting_file_description)
+async def process_file_description(message: Message, state: FSMContext):
+    """Process file description input"""
+    state_data = await state.get_data()
+    audio_settings = state_data.get('audio_settings', {})
+    audio_settings['description'] = message.text.strip()
+    await state.update_data(audio_settings=audio_settings)
+    
+    await message.answer(
+        get_audio_settings_text(audio_settings),
+        reply_markup=get_audio_settings_keyboard(),
+        parse_mode="HTML"
+    )
+    await state.set_state(None)
+
+
+@main_router.message(AudioSettingsStates.waiting_thumbnail, F.photo)
+async def process_thumbnail(message: Message, state: FSMContext, bot: Bot):
+    """Process thumbnail image"""
+    try:
+        # Get the largest photo
+        photo = message.photo[-1]
+        file = await bot.get_file(photo.file_id)
+        
+        # Download to temp location
+        import tempfile
+        import os
+        thumbnail_path = os.path.join(tempfile.gettempdir(), f"thumb_{message.from_user.id}.jpg")
+        await bot.download_file(file.file_path, thumbnail_path)
+        
+        state_data = await state.get_data()
+        audio_settings = state_data.get('audio_settings', {})
+        audio_settings['thumbnail'] = thumbnail_path
+        await state.update_data(audio_settings=audio_settings)
+        
+        await message.answer(
+            get_audio_settings_text(audio_settings),
+            reply_markup=get_audio_settings_keyboard(),
+            parse_mode="HTML"
+        )
+        await state.set_state(None)
+        
+    except Exception as e:
+        logger.error(f"Error processing thumbnail: {e}")
+        await message.answer("❌ خطأ في معالجة الصورة، حاول مرة أخرى")
+
+
+@main_router.message(AudioSettingsStates.waiting_thumbnail)
+async def process_thumbnail_invalid(message: Message):
+    """Handle invalid thumbnail input"""
+    await message.answer("❌ يرجى إرسال صورة فقط!")
+
+
+async def process_audio_download(
+    bot: Bot,
+    chat_id: int,
+    user_id: int,
+    url: str,
+    status_message: Message,
+    audio_settings: dict = None
+) -> None:
+    """Process audio download with custom settings"""
+    start_time = datetime.now()
+    result: Optional[DownloadResult] = None
+    
+    try:
+        # Progress callback
+        async def update_progress(stage: str, percent: int):
+            try:
+                stage_text = {
+                    'connecting': '🔗 جاري الاتصال...',
+                    'downloading': '📥 جاري التحميل...',
+                    'downloaded': '✅ تم التحميل',
+                    'processing': '⚙️ جاري المعالجة...',
+                    'uploading': '📤 جاري الرفع...'
+                }.get(stage, stage)
+                
+                bar = create_progress_bar(percent)
+                await status_message.edit_text(
+                    f"<b>{stage_text}</b>\n{bar}",
+                    parse_mode="HTML"
+                )
+            except:
+                pass
+        
+        # Download audio
+        result = await downloader.download(url, "hd", update_progress, download_audio=True)
+        
+        if not result.success:
+            raise Exception(result.error or "Download failed")
+        
+        # Apply custom settings if provided
+        if audio_settings and any(audio_settings.values()):
+            await update_progress('processing', 80)
+            result = await downloader.apply_audio_metadata(
+                result.file_path,
+                artist=audio_settings.get('artist', ''),
+                title=audio_settings.get('filename', ''),
+                description=audio_settings.get('description', ''),
+                thumbnail=audio_settings.get('thumbnail')
+            )
+        
+        await update_progress('uploading', 90)
+        
+        # Check file size
+        file_size_mb = result.file_size / (1024 * 1024)
+        if file_size_mb > 50:
+            raise Exception(f"File too large: {file_size_mb:.1f}MB (max 50MB)")
+        
+        # Prepare audio file
+        file_obj = FSInputFile(result.file_path)
+        
+        duration = (datetime.now() - start_time).total_seconds()
+        caption = messages.SUCCESS.format(
+            size=downloader.format_file_size(result.file_size),
+            time=f"{duration:.1f}"
+        )
+        
+        # Build performer and title from settings
+        performer = audio_settings.get('artist') if audio_settings else None
+        title = audio_settings.get('filename') if audio_settings else None
+        
+        # Get thumbnail if exists
+        thumb = None
+        if audio_settings and audio_settings.get('thumbnail'):
+            try:
+                thumb = FSInputFile(audio_settings['thumbnail'])
+            except:
+                pass
+        
+        # Send audio with metadata
+        await bot.send_audio(
+            chat_id=chat_id,
+            audio=file_obj,
+            caption=caption,
+            performer=performer,
+            title=title,
+            thumbnail=thumb,
+            parse_mode="HTML"
+        )
+        
+        # Delete status message
+        await status_message.delete()
+        
+        # Update user stats
+        await db.increment_download(user_id)
+        user_cooldowns[user_id] = datetime.now()
+        
+        # Log download
+        await db.log_download(
+            user_id=user_id,
+            url=url,
+            platform=result.platform,
+            quality="audio_custom",
+            file_size=result.file_size,
+            status='success'
+        )
+        
+        # Schedule file cleanup
+        await cleanup_scheduler.schedule_deletion(
+            result.file_path,
+            config.FILE_DELETION_MINUTES
+        )
+        
+        # Clean up thumbnail
+        if audio_settings and audio_settings.get('thumbnail'):
+            try:
+                import os
+                os.remove(audio_settings['thumbnail'])
+            except:
+                pass
+        
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Audio download error for {url}: {error_msg}")
+        
+        try:
+            await status_message.edit_text(
+                messages.ERROR_GENERIC.format(error=error_msg[:200]),
+                parse_mode="HTML"
+            )
+        except:
+            pass
+        
+        # Log error
+        await db.log_download(
+            user_id=user_id,
+            url=url,
+            platform=result.platform if result else 'unknown',
+            quality="audio_custom",
+            status='failed',
+            error_message=error_msg
+        )
+        
+        # Cleanup on error
+        if result and result.file_path:
+            await downloader.cleanup_file(result.file_path)
 
 
 async def on_startup(bot: Bot):
@@ -791,9 +1256,6 @@ def setup_handlers(dp: Dispatcher):
     dp.message.register(start_command, CommandStart())
     dp.message.register(help_command, Command("help"))
     
-    # Include admin router
-    dp.include_router(admin_router)
-    
     # URL messages (must be after commands)
     dp.message.register(handle_url_message, F.text)
     
@@ -817,11 +1279,26 @@ async def main():
     dp = Dispatcher(storage=storage)
     
     # Include routers
-    dp.include_router(admin_router)
-    dp.include_router(broadcast_router)
-    dp.include_router(settings_router)
-    dp.include_router(channels_router)
-    dp.include_router(main_router)
+    try:
+        dp.include_router(admin_router)
+    except RuntimeError:
+        pass
+    try:
+        dp.include_router(broadcast_router)
+    except RuntimeError:
+        pass
+    try:
+        dp.include_router(settings_router)
+    except RuntimeError:
+        pass
+    try:
+        dp.include_router(channels_router)
+    except RuntimeError:
+        pass
+    try:
+        dp.include_router(main_router)
+    except RuntimeError:
+        pass
     
     # Create bot
     bot = Bot(
