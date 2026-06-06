@@ -17,6 +17,7 @@ import json
 import yt_dlp
 
 from config import config, URL_PATTERNS, QUALITY_SETTINGS
+from core.database import db
 
 logger = logging.getLogger(__name__)
 
@@ -365,10 +366,19 @@ class MediaDownloader:
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
             }
             
-            # Check for cookies file to bypass Instagram/Age restrictions
-            if os.path.exists('cookies.txt'):
-                ydl_opts['cookiefile'] = 'cookies.txt'
-                logger.info("Using cookies.txt for download")
+            # Fetch a working cookie from the database
+            cookie_file = await db.get_working_cookie()
+            
+            # Also support legacy cookies.txt if db is empty
+            if not cookie_file and os.path.exists('cookies.txt'):
+                cookie_file = 'cookies.txt'
+                
+            if cookie_file and os.path.exists(cookie_file):
+                ydl_opts['cookiefile'] = cookie_file
+                logger.info(f"Using cookie file: {cookie_file}")
+            elif cookie_file:
+                # Cookie file missing from disk
+                await db.report_cookie_usage(cookie_file, False)
             
             # Audio-only download
             if download_audio:
@@ -444,6 +454,10 @@ class MediaDownloader:
             if progress_callback:
                 await progress_callback("downloaded", 80)
             
+            # Report successful cookie usage
+            if cookie_file and cookie_file != 'cookies.txt':
+                await db.report_cookie_usage(cookie_file, True)
+            
             return DownloadResult(
                 success=True,
                 file_path=actual_path,
@@ -455,13 +469,44 @@ class MediaDownloader:
             )
             
         except Exception as e:
-            logger.error(f"yt-dlp download error: {e}")
+            error_msg = str(e)
+            logger.error(f"yt-dlp download error: {error_msg}")
+            
+            # If error is related to authentication/login, report cookie failure
+            if cookie_file and cookie_file != 'cookies.txt':
+                if any(kw in error_msg.lower() for kw in ['sign in', 'login', 'private', 'checkpoint', 'cookie', 'unauthorized', '401', '403']):
+                    logger.warning(f"Cookie {cookie_file} failed during download. Reporting failure.")
+                    await db.report_cookie_usage(cookie_file, False)
+                    
             return DownloadResult(
                 success=False,
-                error=str(e),
+                error=error_msg,
                 platform=platform
             )
     
+    async def test_cookie(self, file_path: str) -> bool:
+        """Test a cookie against a known Instagram URL"""
+        try:
+            # Test URL provided by user
+            test_url = "https://www.instagram.com/reel/DY4lAq9IQ_3/"
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': True, # Don't download, just extract info
+                'cookiefile': file_path,
+                'socket_timeout': 15,
+            }
+            
+            loop = asyncio.get_event_loop()
+            info = await loop.run_in_executor(
+                None,
+                lambda: self._run_ytdlp(test_url, ydl_opts)
+            )
+            return bool(info and info.get('id'))
+        except Exception as e:
+            logger.error(f"Cookie test failed for {file_path}: {e}")
+            return False
+
     def _run_ytdlp(self, url: str, opts: dict) -> Optional[dict]:
         """Run yt-dlp synchronously"""
         with yt_dlp.YoutubeDL(opts) as ydl:

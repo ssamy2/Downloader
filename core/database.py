@@ -144,6 +144,19 @@ class Database:
                 )
             """)
             
+            # Cookies table
+            await self._connection.execute("""
+                CREATE TABLE IF NOT EXISTS cookies (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    file_path TEXT UNIQUE,
+                    status TEXT DEFAULT 'testing',
+                    uses INTEGER DEFAULT 0,
+                    failures INTEGER DEFAULT 0,
+                    last_used TEXT,
+                    added_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             await self._connection.commit()
     
     async def _auto_migrate_permissions(self) -> None:
@@ -677,6 +690,88 @@ class Database:
                 logger.error(f"Error caching file: {e}")
                 return False
 
+    # ==================== Cookies Management ====================
+    
+    async def add_cookie(self, file_path: str) -> bool:
+        """Add a new cookie file to database"""
+        async with self._lock:
+            try:
+                await self._connection.execute(
+                    "INSERT OR IGNORE INTO cookies (file_path, status) VALUES (?, 'testing')",
+                    (file_path,)
+                )
+                await self._connection.commit()
+                return True
+            except Exception as e:
+                logger.error(f"Error adding cookie: {e}")
+                return False
+                
+    async def get_working_cookie(self) -> Optional[str]:
+        """Get the least recently used working cookie"""
+        async with self._lock:
+            cursor = await self._connection.execute(
+                "SELECT file_path FROM cookies WHERE status = 'working' ORDER BY last_used ASC NULLS FIRST LIMIT 1"
+            )
+            row = await cursor.fetchone()
+            return row['file_path'] if row else None
+            
+    async def update_cookie_status(self, file_path: str, status: str) -> None:
+        """Update cookie status (working, burned)"""
+        async with self._lock:
+            await self._connection.execute(
+                "UPDATE cookies SET status = ? WHERE file_path = ?",
+                (status, file_path)
+            )
+            await self._connection.commit()
+            
+    async def report_cookie_usage(self, file_path: str, success: bool) -> None:
+        """Report success/failure for a cookie"""
+        async with self._lock:
+            now = datetime.now().isoformat()
+            if success:
+                await self._connection.execute("""
+                    UPDATE cookies SET 
+                        uses = uses + 1, 
+                        failures = 0, 
+                        last_used = ?,
+                        status = 'working'
+                    WHERE file_path = ?
+                """, (now, file_path))
+            else:
+                await self._connection.execute("""
+                    UPDATE cookies SET 
+                        failures = failures + 1,
+                        last_used = ?
+                    WHERE file_path = ?
+                """, (now, file_path))
+                
+                # Burn if too many failures
+                await self._connection.execute(
+                    "UPDATE cookies SET status = 'burned' WHERE file_path = ? AND failures >= 3",
+                    (file_path,)
+                )
+            await self._connection.commit()
+            
+    async def get_cookies_stats(self) -> Dict[str, int]:
+        """Get statistics about cookies"""
+        async with self._lock:
+            cursor = await self._connection.execute("SELECT status, COUNT(*) as count FROM cookies GROUP BY status")
+            rows = await cursor.fetchall()
+            stats = {'working': 0, 'burned': 0, 'testing': 0, 'total': 0}
+            for row in rows:
+                stats[row['status']] = row['count']
+                stats['total'] += row['count']
+            return stats
+            
+    async def delete_burned_cookies(self) -> List[str]:
+        """Remove burned cookies from DB and return paths to delete files"""
+        async with self._lock:
+            cursor = await self._connection.execute("SELECT file_path FROM cookies WHERE status = 'burned'")
+            paths = [row['file_path'] for row in await cursor.fetchall()]
+            
+            await self._connection.execute("DELETE FROM cookies WHERE status = 'burned'")
+            await self._connection.commit()
+            return paths
 
 # Global database instance
 db = Database()

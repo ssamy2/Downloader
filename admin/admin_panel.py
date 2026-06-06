@@ -20,6 +20,7 @@ from aiogram.filters import BaseFilter, Command, StateFilter
 
 from config import config, messages
 from core.database import db
+from core.downloader import downloader
 from admin.broadcast_system import broadcast_router, BroadcastStates
 from admin.settings_system import settings_router, SettingsStates
 
@@ -111,7 +112,8 @@ def get_users_menu() -> InlineKeyboardMarkup:
 def get_settings_menu(user_id: int) -> InlineKeyboardMarkup:
     """Settings menu"""
     buttons = [
-        [build_btn('ADMIN_ADMINS_MGR',  callback_data="admin_settings:admins")]
+        [build_btn('ADMIN_ADMINS_MGR',  callback_data="admin_settings:admins")],
+        [InlineKeyboardButton(text="🍪 إدارة الكوكيز (الروابط المحمية)", callback_data="admin_settings:cookies")]
     ]
     
 
@@ -705,7 +707,60 @@ async def notify_admins_error(bot: Bot, user_id: int, url: str,
     except Exception as e:
         logger.error(f"Error notifying admins: {e}")
 
-# ==================== Cookies Upload Handler ====================
+# ==================== Cookies Upload Handler & Management ====================
+
+@admin_router.callback_query(F.data == "admin_settings:cookies")
+async def manage_cookies_menu(callback: CallbackQuery):
+    """Cookies Management Menu"""
+    stats = await db.get_cookies_stats()
+    
+    text = f"""
+<b><tg-emoji emoji-id='5197288647275071607'>🍪</tg-emoji> إدارة ملفات الكوكيز (للإنستغرام وغيره)</b>
+
+<blockquote><b>الإحصائيات:</b>
+  • الإجمالي: <code>{stats['total']}</code>
+  • <tg-emoji emoji-id='5190836223417028350'>✅</tg-emoji> شغالة (Working): <code>{stats.get('working', 0)}</code>
+  • <tg-emoji emoji-id='5175115075450570337'>🚫</tg-emoji> محروقة (Burned): <code>{stats.get('burned', 0)}</code>
+  • ⏳ قيد الفحص: <code>{stats.get('testing', 0)}</code></blockquote>
+
+<b>لإضافة كوكيز جديدة:</b>
+فقط أرسل الملف النصي <code>.txt</code> إلى البوت مباشرة وسيقوم بفحصه وإضافته لدورة الكوكيز.
+"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🗑 مسح الكوكيز المحروقة", callback_data="admin_settings:clear_burned_cookies")],
+        [build_btn('BACK', callback_data="admin_menu:settings")]
+    ])
+    
+    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+
+@admin_router.callback_query(F.data == "admin_settings:clear_burned_cookies")
+async def clear_burned_cookies(callback: CallbackQuery):
+    """Clear burned cookies"""
+    paths = await db.delete_burned_cookies()
+    for path in paths:
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except:
+            pass
+    
+    await callback.answer(f"✅ تم حذف {len(paths)} ملف كوكيز محروق!", show_alert=True)
+    await manage_cookies_menu(callback)
+
+async def background_test_cookie(bot: Bot, admin_id: int, file_path: str):
+    """Background task to test cookie"""
+    success = await downloader.test_cookie(file_path)
+    if success:
+        await db.update_cookie_status(file_path, 'working')
+        text = f"<b><tg-emoji emoji-id='5190836223417028350'>✅</tg-emoji> نجاح فحص الكوكيز!</b>\n\nتمت إضافة الملف بنجاح إلى دورة التحميل وسيعمل بكفاءة مع إنستجرام والروابط المحمية."
+    else:
+        await db.update_cookie_status(file_path, 'burned')
+        text = f"<b><tg-emoji emoji-id='5175115075450570337'>❌</tg-emoji> فشل فحص الكوكيز!</b>\n\nيبدو أن هذا الملف تالف، محروق، أو تم تسجيل الخروج منه. تم استبعاده."
+        
+    try:
+        await bot.send_message(admin_id, text, parse_mode="HTML")
+    except:
+        pass
 
 @admin_router.message(F.document)
 async def handle_admin_document(message: Message, bot: Bot):
@@ -714,18 +769,46 @@ async def handle_admin_document(message: Message, bot: Bot):
         return
         
     document = message.document
-    if document.file_name == 'cookies.txt':
+    if document.file_name and document.file_name.endswith('.txt'):
         try:
-            # Download and save the cookies file
-            file_path = os.path.join(os.getcwd(), 'cookies.txt')
-            await bot.download(document, destination=file_path)
+            # Create cookies dir if not exists
+            cookies_dir = os.path.join('data', 'cookies')
+            os.makedirs(cookies_dir, exist_ok=True)
+            
+            # Download temporarily to check content
+            temp_path = os.path.join(cookies_dir, f"temp_{document.file_id}.txt")
+            await bot.download(document, destination=temp_path)
+            
+            # Check if it's a cookie file
+            is_cookie = False
+            with open(temp_path, 'r', encoding='utf-8') as f:
+                first_lines = "".join([f.readline() for _ in range(5)])
+                if 'Cookie File' in first_lines or '# Netscape' in first_lines or '.instagram.com' in first_lines:
+                    is_cookie = True
+            
+            if not is_cookie:
+                os.remove(temp_path)
+                return  # Not a cookie file, ignore
+                
+            # It's a cookie file, save it properly
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            final_path = os.path.join(cookies_dir, f"cookie_{timestamp}_{document.file_id[:8]}.txt")
+            os.rename(temp_path, final_path)
+            
+            # Add to database
+            await db.add_cookie(final_path)
             
             text = """
-<b><tg-emoji emoji-id='5190836223417028350'>✅</tg-emoji> تم تحديث الكوكيز بنجاح!</b>
+<b>⏳ تم استلام الكوكيز بنجاح!</b>
 
-<blockquote>تم تفعيل الكوكيز الخاصة بك وسيقوم البوت باستخدامها تلقائياً لتخطي قيود يوتيوب (العمر) وإنستجرام.</blockquote>
+<blockquote>جاري الآن الفحص والتجربة المباشرة على إنستجرام...
+سيصلك إشعار بالنتيجة خلال ثوانٍ.</blockquote>
 """
             await message.answer(text, parse_mode="HTML")
+            
+            # Start background test
+            asyncio.create_task(background_test_cookie(bot, message.from_user.id, final_path))
+            
         except Exception as e:
             logger.error(f"Error saving cookies: {e}")
             await message.answer(f"❌ حدث خطأ أثناء حفظ ملف الكوكيز: {str(e)}")
