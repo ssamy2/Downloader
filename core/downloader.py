@@ -366,19 +366,21 @@ class MediaDownloader:
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
             }
             
-            # Fetch a working cookie from the database
-            cookie_file = await db.get_working_cookie()
-            
-            # Also support legacy cookies.txt if db is empty
-            if not cookie_file and os.path.exists('cookies.txt'):
-                cookie_file = 'cookies.txt'
+            # Fetch a working cookie from the database (ONLY FOR INSTAGRAM)
+            cookie_file = None
+            if platform == 'instagram':
+                cookie_file = await db.get_working_cookie()
                 
-            if cookie_file and os.path.exists(cookie_file):
-                ydl_opts['cookiefile'] = cookie_file
-                logger.info(f"Using cookie file: {cookie_file}")
-            elif cookie_file:
-                # Cookie file missing from disk
-                await db.report_cookie_usage(cookie_file, False)
+                # Also support legacy cookies.txt if db is empty
+                if not cookie_file and os.path.exists('cookies.txt'):
+                    cookie_file = 'cookies.txt'
+                    
+                if cookie_file and os.path.exists(cookie_file):
+                    ydl_opts['cookiefile'] = cookie_file
+                    logger.info(f"Using cookie file: {cookie_file}")
+                elif cookie_file:
+                    # Cookie file missing from disk
+                    await db.report_cookie_usage(cookie_file, False)
             
             # Audio-only download
             if download_audio:
@@ -455,7 +457,7 @@ class MediaDownloader:
                 await progress_callback("downloaded", 80)
             
             # Report successful cookie usage
-            if cookie_file and cookie_file != 'cookies.txt':
+            if platform == 'instagram' and cookie_file and cookie_file != 'cookies.txt':
                 await db.report_cookie_usage(cookie_file, True)
             
             return DownloadResult(
@@ -473,7 +475,7 @@ class MediaDownloader:
             logger.error(f"yt-dlp download error: {error_msg}")
             
             # If error is related to authentication/login, report cookie failure
-            if cookie_file and cookie_file != 'cookies.txt':
+            if platform == 'instagram' and cookie_file and cookie_file != 'cookies.txt':
                 if any(kw in error_msg.lower() for kw in ['sign in', 'login', 'private', 'checkpoint', 'cookie', 'unauthorized', '401', '403']):
                     logger.warning(f"Cookie {cookie_file} failed during download. Reporting failure.")
                     await db.report_cookie_usage(cookie_file, False)
