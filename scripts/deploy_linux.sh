@@ -36,16 +36,7 @@ fi
 
 # Install Python dependencies
 echo "📚 Installing Python dependencies..."
-pip3 install -r requirements_linux.txt
-
-# Make scripts executable
-echo "🔧 Making scripts executable..."
-chmod +x setup_linux.py
-chmod +x install_ffmpeg.sh
-
-# Run automatic setup
-echo "⚙️  Running automatic setup..."
-python3 setup_linux.py
+pip3 install -r docs/requirements_linux.txt
 
 # Create systemd service (optional)
 read -p "🤖 Create systemd service for auto-start? (y/n): " -n 1 -r
@@ -85,8 +76,7 @@ echo "🎉 Deployment completed!"
 echo "========================"
 echo "📍 Current directory: $(pwd)"
 echo "🐍 Start bot: python3 main.py"
-echo "📋 Check logs: tail -f bot.log"
+echo "📋 Check logs: tail -f logs/bot.log"
 echo ""
 echo "🎯 Test the bot:"
-echo "   1. Send /start to @XmetaPayRobot"
-echo "   2. Try a link: https://www.instagram.com/reel/DTvV6AHiLyK/"
+echo "   1. Send /start to your bot"
