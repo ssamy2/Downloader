@@ -42,7 +42,7 @@ def initial_setup():
     # Check/Install Python dependencies
     print("\n📚 Checking Python dependencies...")
     try:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', '-r', 'docs/requirements_linux.txt'])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', '-q', '-r', 'docs/requirements_linux.txt'])
         print("✅ Python dependencies are ready.")
     except Exception as e:
         print(f"⚠️ Failed to install python dependencies: {e}")
