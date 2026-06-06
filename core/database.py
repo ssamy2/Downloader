@@ -130,6 +130,20 @@ class Database:
                 )
             """)
             
+            # File Cache table
+            await self._connection.execute("""
+                CREATE TABLE IF NOT EXISTS file_cache (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    url TEXT,
+                    platform TEXT,
+                    quality TEXT,
+                    file_id TEXT,
+                    file_type TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(url, quality)
+                )
+            """)
+            
             await self._connection.commit()
     
     async def _auto_migrate_permissions(self) -> None:
@@ -633,6 +647,34 @@ class Database:
                 return True
             except Exception as e:
                 logger.error(f"Error updating settings: {e}")
+                return False
+
+    # ==================== File Cache ====================
+    
+    async def get_cached_file(self, url: str, quality: str) -> Optional[Dict[str, str]]:
+        """Get cached file_id and file_type for a URL and quality"""
+        async with self._lock:
+            cursor = await self._connection.execute(
+                "SELECT file_id, file_type FROM file_cache WHERE url = ? AND quality = ?",
+                (url, quality)
+            )
+            row = await cursor.fetchone()
+            if row:
+                return {'file_id': row[0], 'file_type': row[1]}
+            return None
+            
+    async def cache_file(self, url: str, platform: str, quality: str, file_id: str, file_type: str = 'video') -> bool:
+        """Cache a file_id for future use"""
+        async with self._lock:
+            try:
+                await self._connection.execute("""
+                    INSERT OR REPLACE INTO file_cache (url, platform, quality, file_id, file_type, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (url, platform, quality, file_id, file_type, datetime.now().isoformat()))
+                await self._connection.commit()
+                return True
+            except Exception as e:
+                logger.error(f"Error caching file: {e}")
                 return False
 
 

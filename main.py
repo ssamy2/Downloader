@@ -452,6 +452,65 @@ async def process_download(
             except:
                 pass
         
+        # Check Cache First
+        cached_file = await db.get_cached_file(url, quality)
+        if cached_file:
+            try:
+                # Attempt to send from cache
+                duration = (datetime.now() - start_time).total_seconds()
+                caption = messages.SUCCESS.format(size="Cached", time=f"{duration:.2f}")
+                
+                is_twitter = platform and 'twitter' in platform.lower()
+                if is_twitter:
+                    caption += "\n\n⚠️ <b>تنبيه:</b> هذه الرسالة ستُحذف بعد 30 ثانية\n💾 يرجى حفظها في السيفد مسدجس"
+                
+                if download_audio or cached_file['file_type'] == 'audio':
+                    sent_msg = await bot.send_audio(
+                        chat_id=chat_id,
+                        audio=cached_file['file_id'],
+                        caption=caption,
+                        parse_mode="HTML"
+                    )
+                else:
+                    sent_msg = await bot.send_video(
+                        chat_id=chat_id,
+                        video=cached_file['file_id'],
+                        caption=caption,
+                        parse_mode="HTML",
+                        supports_streaming=True
+                    )
+                
+                # Delete status message
+                await status_message.delete()
+                
+                # Schedule deletion for Twitter videos after 30 seconds
+                if is_twitter:
+                    async def delete_twitter_message():
+                        try:
+                            await asyncio.sleep(30)
+                            await bot.delete_message(chat_id, sent_msg.message_id)
+                        except:
+                            pass
+                    asyncio.create_task(delete_twitter_message())
+                
+                # Update user stats
+                await db.increment_download(user_id)
+                user_cooldowns[user_id] = datetime.now()
+                
+                # Log download
+                await db.log_download(
+                    user_id=user_id,
+                    url=url,
+                    platform=platform or 'unknown',
+                    quality=quality,
+                    file_size=0,
+                    status='success_cached'
+                )
+                return  # Exit function since we succeeded using cache
+            except Exception as e:
+                logger.warning(f"Failed to use cached file_id for {url}: {e}")
+                # If cache fails (e.g. invalid file_id), continue to normal download
+        
         # Download
         result = await downloader.download(url, quality, update_progress, download_audio)
         
@@ -488,6 +547,8 @@ async def process_download(
                 caption=caption,
                 parse_mode="HTML"
             )
+            if sent_msg.audio:
+                await db.cache_file(url, result.platform, quality, sent_msg.audio.file_id, 'audio')
         else:
             # Send as video
             sent_msg = await bot.send_video(
@@ -497,6 +558,8 @@ async def process_download(
                 parse_mode="HTML",
                 supports_streaming=True
             )
+            if sent_msg.video:
+                await db.cache_file(url, result.platform, quality, sent_msg.video.file_id, 'video')
         
         # Delete status message
         await status_message.delete()
