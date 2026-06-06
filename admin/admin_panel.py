@@ -781,7 +781,7 @@ async def handle_admin_document(message: Message, bot: Bot):
             
             # Check if it's a cookie file
             is_cookie = False
-            with open(temp_path, 'r', encoding='utf-8') as f:
+            with open(temp_path, 'r', encoding='utf-8', errors='ignore') as f:
                 first_lines = "".join([f.readline() for _ in range(5)])
                 if 'Cookie File' in first_lines or '# Netscape' in first_lines or '.instagram.com' in first_lines:
                     is_cookie = True
