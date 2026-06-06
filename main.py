@@ -415,6 +415,27 @@ async def check_user_access(message: Message, bot: Bot) -> bool:
     return True
 
 
+import urllib.parse
+
+def normalize_url_for_cache(url: str) -> str:
+    """Normalize URL by removing tracking parameters for better cache hits"""
+    try:
+        parsed = urllib.parse.urlparse(url)
+        query = urllib.parse.parse_qs(parsed.query)
+        
+        # Essential parameters to keep (whitelist)
+        keep_params = ['v', 'list', 'id']
+        
+        new_query = {k: v for k, v in query.items() if k in keep_params}
+        query_str = urllib.parse.urlencode(new_query, doseq=True)
+        
+        # Remove trailing slash from path for consistency
+        path = parsed.path.rstrip('/')
+        
+        return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, path, parsed.params, query_str, ''))
+    except:
+        return url
+
 async def process_download(
     bot: Bot, 
     chat_id: int, 
@@ -428,6 +449,7 @@ async def process_download(
     """Process a download request"""
     start_time = datetime.now()
     result: Optional[DownloadResult] = None
+    cache_key = normalize_url_for_cache(url)
     
     try:
         # Progress callback
@@ -453,7 +475,7 @@ async def process_download(
                 pass
         
         # Check Cache First
-        cached_file = await db.get_cached_file(url, quality)
+        cached_file = await db.get_cached_file(cache_key, quality)
         if cached_file:
             try:
                 # Attempt to send from cache
@@ -548,7 +570,7 @@ async def process_download(
                 parse_mode="HTML"
             )
             if sent_msg.audio:
-                await db.cache_file(url, result.platform, quality, sent_msg.audio.file_id, 'audio')
+                await db.cache_file(cache_key, result.platform, quality, sent_msg.audio.file_id, 'audio')
         else:
             # Send as video
             sent_msg = await bot.send_video(
@@ -559,7 +581,7 @@ async def process_download(
                 supports_streaming=True
             )
             if sent_msg.video:
-                await db.cache_file(url, result.platform, quality, sent_msg.video.file_id, 'video')
+                await db.cache_file(cache_key, result.platform, quality, sent_msg.video.file_id, 'video')
         
         # Delete status message
         await status_message.delete()
