@@ -4,6 +4,7 @@ Advanced Admin Panel with Professional UI/UX
 """
 import asyncio
 import logging
+import os
 from typing import Optional, List
 from datetime import datetime
 
@@ -703,3 +704,28 @@ async def notify_admins_error(bot: Bot, user_id: int, url: str,
                 pass
     except Exception as e:
         logger.error(f"Error notifying admins: {e}")
+
+# ==================== Cookies Upload Handler ====================
+
+@admin_router.message(F.document)
+async def handle_admin_document(message: Message, bot: Bot):
+    """Handle document uploads from admin (like cookies.txt)"""
+    if not await is_admin(message.from_user.id):
+        return
+        
+    document = message.document
+    if document.file_name == 'cookies.txt':
+        try:
+            # Download and save the cookies file
+            file_path = os.path.join(os.getcwd(), 'cookies.txt')
+            await bot.download(document, destination=file_path)
+            
+            text = """
+<b><tg-emoji emoji-id='5190836223417028350'>✅</tg-emoji> تم تحديث الكوكيز بنجاح!</b>
+
+<blockquote>تم تفعيل الكوكيز الخاصة بك وسيقوم البوت باستخدامها تلقائياً لتخطي قيود يوتيوب (العمر) وإنستجرام.</blockquote>
+"""
+            await message.answer(text, parse_mode="HTML")
+        except Exception as e:
+            logger.error(f"Error saving cookies: {e}")
+            await message.answer(f"❌ حدث خطأ أثناء حفظ ملف الكوكيز: {str(e)}")

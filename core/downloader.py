@@ -365,6 +365,11 @@ class MediaDownloader:
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
             }
             
+            # Check for cookies file to bypass Instagram/Age restrictions
+            if os.path.exists('cookies.txt'):
+                ydl_opts['cookiefile'] = 'cookies.txt'
+                logger.info("Using cookies.txt for download")
+            
             # Audio-only download
             if download_audio:
                 ydl_opts['format'] = 'bestaudio/best'
