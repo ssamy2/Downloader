@@ -2,14 +2,91 @@
 Telegram Downloader Bot - Main Entry Point
 High-performance media downloader with Cobalt API and yt-dlp
 """
-import asyncio
-import logging
 import sys
+import os
+import subprocess
+import re
 import traceback
 import importlib.util
 from datetime import datetime
 from typing import Dict, Optional
+import json
 
+# ==========================================
+# 1. INTERACTIVE SETUP & DEPENDENCIES
+# ==========================================
+def initial_setup():
+    """Interactive setup, dependency check and Node.js installation"""
+    # Only prompt if running interactively
+    if sys.stdin.isatty():
+        print("="*50)
+        print("🤖 Bot Initial Setup")
+        print("="*50)
+        token = input("Enter Bot Token (Press Enter to skip): ").strip()
+        admin_id = input("Enter Admin ID (Press Enter to skip): ").strip()
+        
+        if token or admin_id:
+            try:
+                with open('config.py', 'r', encoding='utf-8') as f:
+                    cfg = f.read()
+                if token:
+                    cfg = re.sub(r'TOKEN:\s*str\s*=\s*["\'][^"\']*["\']', f'TOKEN: str = "{token}"', cfg)
+                if admin_id:
+                    cfg = re.sub(r'PRIMARY_OWNER_ID:\s*int\s*=\s*\d+', f'PRIMARY_OWNER_ID: int = {admin_id}', cfg)
+                with open('config.py', 'w', encoding='utf-8') as f:
+                    f.write(cfg)
+                print("✅ Config updated successfully.")
+            except Exception as e:
+                print(f"⚠️ Could not update config: {e}")
+
+    # Check/Install Python dependencies
+    print("\n📚 Checking Python dependencies...")
+    try:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', '-r', 'docs/requirements_linux.txt'])
+        print("✅ Python dependencies are ready.")
+    except Exception as e:
+        print(f"⚠️ Failed to install python dependencies: {e}")
+
+    # Check/Install Node.js
+    print("\n🟢 Checking Node.js (Required for yt-dlp YouTube extraction)...")
+    try:
+        subprocess.run(['node', '-v'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print("✅ Node.js is already installed.")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("📦 Node.js not found. Attempting to install...")
+        if sys.platform.startswith('linux'):
+            try:
+                subprocess.run('sudo apt update && sudo apt install -y nodejs', shell=True)
+            except:
+                try:
+                    subprocess.run('sudo yum install -y nodejs || sudo dnf install -y nodejs', shell=True)
+                except Exception as e:
+                    print(f"⚠️ Could not install Node.js automatically: {e}")
+        else:
+            print("🔧 Please install Node.js manually from https://nodejs.org/")
+            
+    # Check FFmpeg
+    import shutil
+    if not shutil.which('ffmpeg'):
+        print("\n🎬 FFmpeg not found! Attempting to install...")
+        if sys.platform.startswith('linux'):
+            subprocess.run('sudo apt install -y ffmpeg || sudo yum install -y ffmpeg || sudo dnf install -y ffmpeg', shell=True)
+            
+    # Create directories
+    from pathlib import Path
+    for dir_name in ['downloads', 'logs', 'data']:
+        Path(dir_name).mkdir(exist_ok=True)
+        
+    print("\n✅ Initial setup complete! Starting the bot...\n")
+
+# Run it immediately before any third-party imports
+initial_setup()
+
+# ==========================================
+# 2. IMPORTS & CONFIGURATION
+# ==========================================
+import asyncio
+import logging
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.types import (
     Message, CallbackQuery, InlineKeyboardMarkup, 
@@ -21,169 +98,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode, ChatMemberStatus
-import json
 
 from config import config, messages, emojis, build_btn
 from core.database import db
 from core.downloader import downloader, cleanup_scheduler, DownloadResult
-from admin.admin_panel import admin_router, is_admin, notify_admins_error, IsAdminFilter, HasFullAccessFilter
-from admin.broadcast_system import broadcast_router
-from admin.settings_system import settings_router
-from admin.channels_system import channels_router
-from admin.ui_editor import ui_editor_router
 from core.anonstories import anon_stories
-
-# Auto-setup: Check and install dependencies
-def run_auto_setup():
-    """Run automatic setup if needed"""
-    print("🔍 Checking dependencies...")
-    
-    # Check required packages
-    required_packages = [
-        ('aiogram', '3.28.2'),
-        ('aiosqlite', '0.20.0'),
-        ('aiohttp', '3.10.10'),
-        ('aiofiles', '24.1.0'),
-        ('yt_dlp', '2024.11.18'),
-        ('psutil', '6.1.0'),
-        ('playwright', '1.40.0')
-    ]
-    
-    missing_packages = []
-    
-    for package, min_version in required_packages:
-        try:
-            if package == 'yt_dlp':
-                spec = importlib.util.find_spec('yt_dlp')
-            else:
-                spec = importlib.util.find_spec(package)
-            
-            if spec is None:
-                missing_packages.append(package)
-                print(f"❌ {package} - Missing")
-            else:
-                print(f"✅ {package} - OK")
-        except ImportError:
-            missing_packages.append(package)
-            print(f"❌ {package} - Missing")
-    
-    # Install missing packages
-    if missing_packages:
-        print(f"📦 Installing missing packages: {', '.join(missing_packages)}")
-        import subprocess
-        
-        for package in missing_packages:
-            try:
-                if package == 'yt_dlp':
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "yt-dlp>=2024.11.18"])
-                else:
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", f"{package}"])
-                print(f"✅ {package} installed")
-            except subprocess.CalledProcessError as e:
-                print(f"❌ Failed to install {package}: {e}")
-                return False
-    
-    # Check FFmpeg
-    import shutil
-    ffmpeg_path = shutil.which('ffmpeg')
-    if not ffmpeg_path:
-        print("❌ FFmpeg not found!")
-        
-        # Try to install FFmpeg automatically
-        import platform
-        system = platform.system().lower()
-        
-        if system == 'linux':
-            print("🐧 Linux detected - attempting to install FFmpeg...")
-            try:
-                subprocess.run(['sudo', 'apt', 'install', '-y', 'ffmpeg'], 
-                             check=True, capture_output=True)
-                ffmpeg_path = shutil.which('ffmpeg')
-                if ffmpeg_path:
-                    print("✅ FFmpeg installed successfully")
-            except:
-                print("⚠️  Could not install FFmpeg automatically")
-                print("🔧 Please install FFmpeg manually:")
-                print("   Ubuntu/Debian: sudo apt install ffmpeg")
-                print("   CentOS/RHEL: sudo yum install ffmpeg")
-                print("   Windows: Download from https://www.gyan.dev/ffmpeg/builds/")
-                return False
-        
-        elif system == 'windows':
-            print("🪟 Windows detected - checking for local FFmpeg...")
-            from pathlib import Path
-            
-            # Check for FFmpeg in project directory
-            ffmpeg_dir = Path('ffmpeg-8.0.1-essentials_build')
-            if ffmpeg_dir.exists():
-                ffmpeg_exe = ffmpeg_dir / 'bin' / 'ffmpeg.exe'
-                if ffmpeg_exe.exists():
-                    ffmpeg_path = str(ffmpeg_exe.absolute())
-                    print(f"✅ Found local FFmpeg: {ffmpeg_path}")
-                    
-                    # Update config
-                    try:
-                        with open('config.py', 'r', encoding='utf-8') as f:
-                            content = f.read()
-                        
-                        import re
-                        # Escape backslashes properly for regex replacement
-                        escaped_path = ffmpeg_path.replace('\\', '\\\\')
-                        content = re.sub(
-                            r'FFMPEG_PATH:\s*str\s*=\s*["\'][^"\']*["\']',
-                            f'FFMPEG_PATH: str = r"{escaped_path}"',
-                            content
-                        )
-                        
-                        with open('config.py', 'w', encoding='utf-8') as f:
-                            f.write(content)
-                        
-                        print("✅ Updated FFmpeg path in config.py")
-                    except Exception as e:
-                        print(f"⚠️  Could not update config.py: {e}")
-                        print(f"🔧 Manual fix: Update this line in config.py:")
-                        print(f'   FFMPEG_PATH: str = r"{ffmpeg_path}"')
-                else:
-                    print("❌ FFmpeg executable not found in project directory")
-                    return False
-            else:
-                print("❌ FFmpeg not found. Please download and extract to project folder")
-                return False
-    
-    # Create necessary directories
-    from pathlib import Path
-    for dir_name in ['downloads', 'logs']:
-        dir_path = Path(dir_name)
-        dir_path.mkdir(exist_ok=True)
-    
-    # Install Playwright browsers automatically
-    print("\n🎬 Checking Playwright browsers...")
-    try:
-        import subprocess
-        result = subprocess.run(
-            [sys.executable, "-m", "playwright", "install", "chromium"],
-            capture_output=True,
-            timeout=300
-        )
-        if result.returncode == 0:
-            print("✅ Playwright Chromium browser ready")
-        else:
-            print("⚠️  Playwright browser installation had issues")
-    except Exception as e:
-        print(f"⚠️  Could not install Playwright browsers: {e}")
-        print("🔧 Please run manually: python -m playwright install chromium")
-    
-    print("✅ All dependencies ready!")
-    return True
-                                     
-# Run auto-setup before importing other modules
-if not run_auto_setup():
-    print("❌ Setup failed. Please install dependencies manually.")
-    sys.exit(1)
-
-from config import config, messages, emojis, build_btn
-from core.database import db
-from core.downloader import downloader, cleanup_scheduler, DownloadResult
 from admin.admin_panel import admin_router, is_admin, notify_admins_error, IsAdminFilter, HasFullAccessFilter
 from admin.broadcast_system import broadcast_router
 from admin.settings_system import settings_router
