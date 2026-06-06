@@ -1,0 +1,1820 @@
+{
+  "total": 150,
+  "packs": [
+    {
+      "name": "FinanceEmoji",
+      "title": "Finance Emoji",
+      "type": "custom_emoji",
+      "count": 60
+    },
+    {
+      "name": "O_N2icACAEADAJCACG_by_e4zybot",
+      "title": "max ★ @hssss",
+      "type": "custom_emoji",
+      "count": 45
+    },
+    {
+      "name": "RoyaltyHub2",
+      "title": "@Ry_Hub Royalty Hub",
+      "type": "custom_emoji",
+      "count": 45
+    }
+  ],
+  "emojis": [
+    {
+      "id": "5267500801240092311",
+      "emoji": "⭐",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Spinning 3D pink star"
+    },
+    {
+      "id": "5197434882321567830",
+      "emoji": "💵",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green 3D Dollar sign $"
+    },
+    {
+      "id": "5197369495739455200",
+      "emoji": "💶",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Purple 3D Euro sign €"
+    },
+    {
+      "id": "5377505475015235101",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Orange 3D Bitcoin coin"
+    },
+    {
+      "id": "5377775044342599336",
+      "emoji": "💷",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Pink 3D Pound sign £"
+    },
+    {
+      "id": "5197161121106123533",
+      "emoji": "💴",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Red 3D Yen sign ¥"
+    },
+    {
+      "id": "5377746319601324795",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Shiny blue TON coin"
+    },
+    {
+      "id": "5379773896352355687",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Gold Binance (BNB) coin"
+    },
+    {
+      "id": "5202064723922670546",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue Ethereum diamond"
+    },
+    {
+      "id": "5202113974312653146",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Cyan Solana logo"
+    },
+    {
+      "id": "5377620962390857342",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue TON shield/diamond"
+    },
+    {
+      "id": "5201692367437974073",
+      "emoji": "💵",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green Tether (USDT) coin"
+    },
+    {
+      "id": "5199552030615558774",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Gold Dogecoin"
+    },
+    {
+      "id": "5197371802136892976",
+      "emoji": "⛏",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Pickaxe hitting rock (Mining)"
+    },
+    {
+      "id": "5445353829304387411",
+      "emoji": "💳",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue credit card"
+    },
+    {
+      "id": "5443127283898405358",
+      "emoji": "📥",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green down arrow pointing to inbox (Deposit/Receive)"
+    },
+    {
+      "id": "5445355530111437729",
+      "emoji": "📤",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green up arrow pointing out of box (Withdraw/Send)"
+    },
+    {
+      "id": "5197269100878907942",
+      "emoji": "✍️",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Clipboard with contract and writing pen"
+    },
+    {
+      "id": "5330320040883411678",
+      "emoji": "🗺",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Red map pin with $ inside"
+    },
+    {
+      "id": "5201691993775818138",
+      "emoji": "🛫",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green paper plane launching"
+    },
+    {
+      "id": "5303138782004924588",
+      "emoji": "💬",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue and purple chat bubbles"
+    },
+    {
+      "id": "5310278924616356636",
+      "emoji": "🎯",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Red bullseye with dart (Target/Success)"
+    },
+    {
+      "id": "5294167145079395967",
+      "emoji": "🛍",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green 3D percentage sign %"
+    },
+    {
+      "id": "5444856076954520455",
+      "emoji": "🧾",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue paper receipt/invoice"
+    },
+    {
+      "id": "5399909394525737759",
+      "emoji": "🪣",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue funnel filtering money"
+    },
+    {
+      "id": "5224450179368767019",
+      "emoji": "🌎",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Spinning blue globe"
+    },
+    {
+      "id": "5411089297476441876",
+      "emoji": "🐻",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Angry bear with red down arrow (Bear Market)"
+    },
+    {
+      "id": "5411233191765759009",
+      "emoji": "🐂",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Raging bull with green up arrow (Bull Market)"
+    },
+    {
+      "id": "5332724926216428039",
+      "emoji": "📇",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Social network user connections"
+    },
+    {
+      "id": "5303214794336125778",
+      "emoji": "🧮",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Grey calculator"
+    },
+    {
+      "id": "5382194935057372936",
+      "emoji": "⏱",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue stopwatch"
+    },
+    {
+      "id": "5429518319243775957",
+      "emoji": "📉",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Red and yellow downward bar chart"
+    },
+    {
+      "id": "5429651785352501917",
+      "emoji": "↗️",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green and yellow upward bar chart"
+    },
+    {
+      "id": "5312361253610475399",
+      "emoji": "🛒",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Shopping cart"
+    },
+    {
+      "id": "5400250414929041085",
+      "emoji": "⚖️",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Balanced silver scales of justice"
+    },
+    {
+      "id": "5400362079783770689",
+      "emoji": "🐳",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Swimming blue whale (Crypto Whale)"
+    },
+    {
+      "id": "5193177581888755275",
+      "emoji": "💻",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Open laptop shooting out a gold coin"
+    },
+    {
+      "id": "5190806721286657692",
+      "emoji": "📊",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Colorful pie chart"
+    },
+    {
+      "id": "5305699699204837855",
+      "emoji": "🍀",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green four-leaf clover (Luck)"
+    },
+    {
+      "id": "5312123810638483121",
+      "emoji": "🐷",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Shiny golden piggy bank"
+    },
+    {
+      "id": "5271837459783638319",
+      "emoji": "↔️",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue and white P2P exchange arrows"
+    },
+    {
+      "id": "5332455502917949981",
+      "emoji": "🏦",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Classic bank building"
+    },
+    {
+      "id": "5379999674193172777",
+      "emoji": "🔭",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "إيموجي 🔭 متحرك"
+    },
+    {
+      "id": "5377535110289576661",
+      "emoji": "🧲",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Red horseshoe magnet attracting coins"
+    },
+    {
+      "id": "5278702045883292456",
+      "emoji": "🛍",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Classic store front"
+    },
+    {
+      "id": "5312441427764989435",
+      "emoji": "💱",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Blue and green currency exchange arrows"
+    },
+    {
+      "id": "5445221832074483553",
+      "emoji": "💼",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Classic brown briefcase"
+    },
+    {
+      "id": "5274055917766202507",
+      "emoji": "🗓",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Calendar showing days passing"
+    },
+    {
+      "id": "5262517101578443800",
+      "emoji": "🖼",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Shiny digital NFT picture frame"
+    },
+    {
+      "id": "5197503331215361533",
+      "emoji": "📈",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green upward line chart board"
+    },
+    {
+      "id": "5195033767969839232",
+      "emoji": "🚀",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Rocket taking off"
+    },
+    {
+      "id": "5197288647275071607",
+      "emoji": "🛡",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Glowing blue security shield"
+    },
+    {
+      "id": "5190741648237161191",
+      "emoji": "🧮",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Math abacus"
+    },
+    {
+      "id": "5291914649481007565",
+      "emoji": "💵",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green paper money flying"
+    },
+    {
+      "id": "5264713049637409446",
+      "emoji": "🪙",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Stack of gold coins"
+    },
+    {
+      "id": "5267102644886853973",
+      "emoji": "❤️",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Beating cartoon red heart"
+    },
+    {
+      "id": "5240228673738527951",
+      "emoji": "🏷",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Yellow SALE discount tag"
+    },
+    {
+      "id": "5287231198098117669",
+      "emoji": "💰",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Green money sack full of $$$"
+    },
+    {
+      "id": "5262844652964303985",
+      "emoji": "💡",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Glowing lightbulb (Idea)"
+    },
+    {
+      "id": "5278467510604160626",
+      "emoji": "💰",
+      "style": "animated",
+      "pack": "FinanceEmoji",
+      "pack_title": "Finance Emoji",
+      "description": "Gold treasure chest opening and closing"
+    },
+    {
+      "id": "5190663247904152354",
+      "emoji": "🥶",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue freezing face shivering"
+    },
+    {
+      "id": "5190704926266793016",
+      "emoji": "👍",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue Thumbs up"
+    },
+    {
+      "id": "5190428742689791174",
+      "emoji": "👎",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue Thumbs down"
+    },
+    {
+      "id": "5190656917122357184",
+      "emoji": "🤝",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue handshake"
+    },
+    {
+      "id": "5190429099172077423",
+      "emoji": "👏",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue clapping hands"
+    },
+    {
+      "id": "5190921353963801065",
+      "emoji": "👌",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue OK hand sign"
+    },
+    {
+      "id": "5190530464695226323",
+      "emoji": "🖕",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue middle finger"
+    },
+    {
+      "id": "5190401572726675514",
+      "emoji": "🔥",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue burning fire"
+    },
+    {
+      "id": "5190440583914629877",
+      "emoji": "⚡️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Bright blue lightning bolt"
+    },
+    {
+      "id": "5190836223417028350",
+      "emoji": "✅",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue 3D square checkmark"
+    },
+    {
+      "id": "5190436636839681097",
+      "emoji": "❄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue 3D crystal snowflake"
+    },
+    {
+      "id": "5190607263005445520",
+      "emoji": "🧠",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue pulsating brain"
+    },
+    {
+      "id": "5192715031090858438",
+      "emoji": "💎",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Sparkling blue diamond"
+    },
+    {
+      "id": "5190676510763161056",
+      "emoji": "🐧",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Cute blue penguin face"
+    },
+    {
+      "id": "5190772159684842393",
+      "emoji": "🐥",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue chick bird face"
+    },
+    {
+      "id": "5190704402280777766",
+      "emoji": "🧊",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue ice cube with a frozen face inside"
+    },
+    {
+      "id": "5190756388564936443",
+      "emoji": "🐶",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Frozen blue teddy bear looking cold"
+    },
+    {
+      "id": "5193083556464725500",
+      "emoji": "🐦",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue melting freezing face"
+    },
+    {
+      "id": "5190739994674763364",
+      "emoji": "🦆",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Surprised round blue cartoon face"
+    },
+    {
+      "id": "5190500447168793225",
+      "emoji": "🧊",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "إيموجي 🧊 متحرك"
+    },
+    {
+      "id": "5190412640857397991",
+      "emoji": "🥶",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Little snow monster with claws"
+    },
+    {
+      "id": "5192965818526240875",
+      "emoji": "🐱",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Sleeping peaceful blue monster"
+    },
+    {
+      "id": "5192880687979464510",
+      "emoji": "🥶",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Cartoon snowman with creepy smile"
+    },
+    {
+      "id": "5190760400064384595",
+      "emoji": "🥶",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Angry blue face with big eyes"
+    },
+    {
+      "id": "5190693669157510239",
+      "emoji": "😱",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue cartoon teddy bear with shiny eyes"
+    },
+    {
+      "id": "5190912398956994525",
+      "emoji": "🧸",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Relaxed sleeping blue teddy bear"
+    },
+    {
+      "id": "5190627629740369616",
+      "emoji": "😴",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "AFK text with icy blue letters"
+    },
+    {
+      "id": "5193158452104432950",
+      "emoji": "🐻‍❄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "White panda bear face with a blue tint"
+    },
+    {
+      "id": "5193122009306926579",
+      "emoji": "⛄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Cute snowman wearing a green scarf"
+    },
+    {
+      "id": "5190450281950781285",
+      "emoji": "⛄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "White cloud dropping snow"
+    },
+    {
+      "id": "5190725335951382700",
+      "emoji": "⛄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Smiling snowman with wide eyes"
+    },
+    {
+      "id": "5190689116492176660",
+      "emoji": "⛄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Angry looking snowman"
+    },
+    {
+      "id": "5190749516617260554",
+      "emoji": "☃️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Very cute snowman waving"
+    },
+    {
+      "id": "5193150330321274655",
+      "emoji": "🐧",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Standing penguin waving hand"
+    },
+    {
+      "id": "5190828307792305250",
+      "emoji": "🌨️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Heavy snowstorm"
+    },
+    {
+      "id": "5192750400146538859",
+      "emoji": "💎",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Huge 3D blue diamond"
+    },
+    {
+      "id": "5192748939857658908",
+      "emoji": "✈️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue airplane taking off"
+    },
+    {
+      "id": "5190716282160320758",
+      "emoji": "✈️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue Telegram paper plane logo"
+    },
+    {
+      "id": "5190405124664630666",
+      "emoji": "⭐️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Sparkling 3D blue star"
+    },
+    {
+      "id": "5190938800120962842",
+      "emoji": "💲",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Blue 3D dollar sign $"
+    },
+    {
+      "id": "5190691401414779253",
+      "emoji": "❤️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Beating blue heart"
+    },
+    {
+      "id": "5190774375887970868",
+      "emoji": "❤️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Beating light cyan heart"
+    },
+    {
+      "id": "5190682055565942208",
+      "emoji": "❤️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Classic beating blue heart"
+    },
+    {
+      "id": "5190597702408247709",
+      "emoji": "❄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Sitting small blue monster"
+    },
+    {
+      "id": "5190524099553695337",
+      "emoji": "❄️",
+      "style": "animated",
+      "pack": "O_N2icACAEADAJCACG_by_e4zybot",
+      "pack_title": "max ★ @hssss",
+      "description": "Small blue monster waving hand"
+    },
+    {
+      "id": "5175107164120810793",
+      "emoji": "🥇",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Gold medal for 1st place with ribbons and fireworks"
+    },
+    {
+      "id": "5174974857653259843",
+      "emoji": "🥈",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Silver medal for 2nd place"
+    },
+    {
+      "id": "5172509628029732452",
+      "emoji": "🥉",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Bronze medal for 3rd place"
+    },
+    {
+      "id": "5172919728687023808",
+      "emoji": "⚡️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Bright yellow lightning bolt (Speed/Alert)"
+    },
+    {
+      "id": "5174814590948607816",
+      "emoji": "🔔",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Ringing golden bell"
+    },
+    {
+      "id": "5174657704383219432",
+      "emoji": "1⃣",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Number 1 burning with fire"
+    },
+    {
+      "id": "5174948314755368553",
+      "emoji": "2⃣",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Number 2 burning with fire"
+    },
+    {
+      "id": "5175101035202479471",
+      "emoji": "3⃣",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Number 3 burning with fire"
+    },
+    {
+      "id": "5172571638767551946",
+      "emoji": "⚠️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Red warning triangle with exclamation mark"
+    },
+    {
+      "id": "5175115075450570337",
+      "emoji": "❌",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Thick red cross (Error/Cancel)"
+    },
+    {
+      "id": "5174794584990943214",
+      "emoji": "🔽",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Blue down arrow"
+    },
+    {
+      "id": "5172790652034876837",
+      "emoji": "❗️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Red exclamation mark"
+    },
+    {
+      "id": "5172778127910242619",
+      "emoji": "🫦",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "18+ warning sign with starburst"
+    },
+    {
+      "id": "5174879526559155862",
+      "emoji": "📌",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Red pushpin (Pinned message)"
+    },
+    {
+      "id": "5172937728894960951",
+      "emoji": "💥",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Starburst explosion"
+    },
+    {
+      "id": "5175145436574385802",
+      "emoji": "🔥",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Orange fire flame"
+    },
+    {
+      "id": "5175187660397872563",
+      "emoji": "⚠️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Yellow warning sign"
+    },
+    {
+      "id": "5174885208800887893",
+      "emoji": "✔️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Shiny 3D green checkmark (Success)"
+    },
+    {
+      "id": "5172748496930867424",
+      "emoji": "🔼",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Green up arrow"
+    },
+    {
+      "id": "5174818782836688138",
+      "emoji": "🕯",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Red and green financial trading candlesticks"
+    },
+    {
+      "id": "5174699378450892474",
+      "emoji": "🆓",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Green 3D FREE text"
+    },
+    {
+      "id": "5172879257210193582",
+      "emoji": "💵",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Green 3D dollar sign"
+    },
+    {
+      "id": "5172432808244676412",
+      "emoji": "🆕",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Red 3D NEW text"
+    },
+    {
+      "id": "5174841975660086476",
+      "emoji": "👍",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Beating heart (Like/React)"
+    },
+    {
+      "id": "5172651834396902766",
+      "emoji": "🔴",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Glowing red circle (Recording/Live)"
+    },
+    {
+      "id": "5174930808468669692",
+      "emoji": "🔜",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Blue SOON text"
+    },
+    {
+      "id": "5175144109429490794",
+      "emoji": "👀",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Animated cartoon eyes looking around"
+    },
+    {
+      "id": "5174904115246925453",
+      "emoji": "🔗",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Blue chain link"
+    },
+    {
+      "id": "5174715145275835807",
+      "emoji": "➡️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Blue right arrow"
+    },
+    {
+      "id": "5172689561389630605",
+      "emoji": "⬇️",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Blue 3D down arrow"
+    },
+    {
+      "id": "5175046403218475179",
+      "emoji": "🚨",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Neon SALE sign"
+    },
+    {
+      "id": "5175049577199306588",
+      "emoji": "🎉",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Party popper with confetti (Celebration)"
+    },
+    {
+      "id": "5172943935122704852",
+      "emoji": "🛍",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Blue shield with Telegram logo"
+    },
+    {
+      "id": "5172422380064081032",
+      "emoji": "🛍",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Shield with fingerprint for security"
+    },
+    {
+      "id": "5172670444490196632",
+      "emoji": "🛍",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Shield with a closed lock"
+    },
+    {
+      "id": "5174666556310815974",
+      "emoji": "🛍",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "Shield resembling a safe vault"
+    },
+    {
+      "id": "5172671062965486810",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5175077301213201546",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5172867441755161972",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5172846503789593701",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5175180225809482896",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5175124541558490136",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5174658584851514938",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5174896491679975343",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "id": "5175068161522795462",
+      "emoji": "🏳",
+      "style": "animated",
+      "pack": "RoyaltyHub2",
+      "pack_title": "@Ry_Hub Royalty Hub",
+      "description": "إيموجي 🏳 متحرك"
+    },
+    {
+      "emoji": "🪙",
+      "id": "5382164415019768638",
+      "style": "animated",
+      "description": "Golden TON crystal coin spinning",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🛫",
+      "id": "5463424023734014980",
+      "style": "animated",
+      "description": "Blue paper plane launching with TON diamond",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "💱",
+      "id": "5377336227533969892",
+      "style": "animated",
+      "description": "Green currency exchange arrows with coins",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "💰",
+      "id": "5417924076503062111",
+      "style": "animated",
+      "description": "Green money bag with dollar sign",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🗓️",
+      "id": "5472279086657199080",
+      "style": "animated",
+      "description": "Calendar with page flipping (Date/Schedule)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🔓",
+      "id": "5429405838345265327",
+      "style": "animated",
+      "description": "Golden padlock unlocking (Access/Unlock)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🛒",
+      "id": "5400090058030075645",
+      "style": "animated",
+      "description": "Shopping cart with items inside",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🛒",
+      "id": "5440841102871517055",
+      "style": "animated",
+      "description": "Red BUY button with hand clicking",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🧩",
+      "id": "5213306719215577669",
+      "style": "animated",
+      "description": "Colorful puzzle piece connecting (Integration)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🔗",
+      "id": "5440410042773824003",
+      "style": "animated",
+      "description": "Chain link with TON logo (Blockchain Link)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🏆",
+      "id": "5188344996356448758",
+      "style": "animated",
+      "description": "Golden trophy cup with star (Achievement)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "📊",
+      "id": "5203993413346680064",
+      "style": "animated",
+      "description": "Colorful bar chart with upward trend",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🐷",
+      "id": "5417831807720642261",
+      "style": "animated",
+      "description": "Pink piggy bank with gold coins",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🏦",
+      "id": "5238132025323444613",
+      "style": "animated",
+      "description": "Classic bank building with columns",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🪙",
+      "id": "5296339823005557585",
+      "style": "animated",
+      "description": "Golden TON diamond on pedestal",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🏅",
+      "id": "5424746623462823358",
+      "style": "animated",
+      "description": "Gold medal badge with ribbon (Reward)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🧲",
+      "id": "5202106638508512484",
+      "style": "animated",
+      "description": "Red magnet attracting gold coins",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "📣",
+      "id": "5298609030321691620",
+      "style": "animated",
+      "description": "Pink megaphone announcing (Promotion/Alert)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "💵",
+      "id": "5201873447554145566",
+      "style": "animated",
+      "description": "Green dollar bill flying",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🌱",
+      "id": "5474417568053745249",
+      "style": "animated",
+      "description": "Green sprout growing from soil (Growth/Seed)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🪧",
+      "id": "5429278861932124623",
+      "style": "animated",
+      "description": "Signpost with arrow pointing direction",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "📈",
+      "id": "5298614648138919107",
+      "style": "animated",
+      "description": "Green upward chart on whiteboard (Analytics)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🫴",
+      "id": "5440457429147997980",
+      "style": "animated",
+      "description": "Open hand presenting (Offer/Give)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🪙",
+      "id": "5296355151743838259",
+      "style": "animated",
+      "description": "Stack of golden coins with TON logo",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "⚖️",
+      "id": "5461152608804689572",
+      "style": "animated",
+      "description": "Balanced golden scales (Justice/Fair Trade)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "📞",
+      "id": "5213179235996294999",
+      "style": "animated",
+      "description": "Red phone receiver ringing",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🚀",
+      "id": "5188481279963715781",
+      "style": "animated",
+      "description": "Orange rocket blasting off with flames",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "💳",
+      "id": "5472250091332993630",
+      "style": "animated",
+      "description": "Blue credit card with chip",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🗺",
+      "id": "5235794253149394263",
+      "style": "animated",
+      "description": "Treasure map with X marks the spot",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "💎",
+      "id": "5462902520215002477",
+      "style": "animated",
+      "description": "Sparkling blue TON diamond crystal",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🏷️",
+      "id": "5298877105000439431",
+      "style": "animated",
+      "description": "Yellow SOLD price tag",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🎯",
+      "id": "5461009483314517035",
+      "style": "animated",
+      "description": "Red and white bullseye target with dart",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "📩",
+      "id": "5472239203590888751",
+      "style": "animated",
+      "description": "Envelope with incoming mail notification",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "💬",
+      "id": "5235570365094188078",
+      "style": "animated",
+      "description": "Blue chat bubble with typing dots",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "⛏",
+      "id": "5461047575379466857",
+      "style": "animated",
+      "description": "Pickaxe mining golden ore",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "⛏️",
+      "id": "5204006143629744642",
+      "style": "animated",
+      "description": "Pickaxe with TON crystal mining",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🎰",
+      "id": "5235989279024373566",
+      "style": "animated",
+      "description": "Slot machine with jackpot stars",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🪂",
+      "id": "5461128651477111908",
+      "style": "animated",
+      "description": "Parachute with gift box dropping",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🪙",
+      "id": "5381975814415866082",
+      "style": "animated",
+      "description": "Golden TON coin with blue diamond center",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🧾",
+      "id": "5204242830687494041",
+      "style": "animated",
+      "description": "Paper receipt with transaction details",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "👛",
+      "id": "5215420556089776398",
+      "style": "animated",
+      "description": "Pink wallet purse with coins",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🪙",
+      "id": "5298719183347932250",
+      "style": "animated",
+      "description": "Jar full of golden coins (Savings)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "⌨️",
+      "id": "5298975240708187753",
+      "style": "animated",
+      "description": "Keyboard with glowing keys (Input/Type)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🔑",
+      "id": "5307843983102204243",
+      "style": "animated",
+      "description": "Golden key turning in lock (Access Key)",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "🔋",
+      "id": "5307905813451397794",
+      "style": "animated",
+      "description": "Green battery charging with lightning bolt",
+      "pack": "TONEmoji"
+    },
+    {
+      "emoji": "😆",
+      "id": "5323523560080158541",
+      "style": "animated",
+      "description": "Robot laughing with wide open mouth (LOL)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😅",
+      "id": "5199468807034253648",
+      "style": "animated",
+      "description": "Robot sweating nervously with awkward smile",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😊",
+      "id": "5352899869369446268",
+      "style": "animated",
+      "description": "Robot smiling warmly with blushing cheeks",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😉",
+      "id": "5339267587337370029",
+      "style": "animated",
+      "description": "Robot winking with one eye closed",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😍",
+      "id": "5217824874487101321",
+      "style": "animated",
+      "description": "Robot with heart eyes in love",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😘",
+      "id": "5307736407056331791",
+      "style": "animated",
+      "description": "Robot blowing a kiss with heart",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😝",
+      "id": "5460631951394225073",
+      "style": "animated",
+      "description": "Robot sticking tongue out playfully",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🤨",
+      "id": "5352640560718949874",
+      "style": "animated",
+      "description": "Robot raising one eyebrow skeptically",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🤩",
+      "id": "5353025608832004653",
+      "style": "animated",
+      "description": "Robot with star eyes amazed (Wow)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🥳",
+      "id": "5197630131534836123",
+      "style": "animated",
+      "description": "Robot celebrating with party hat (Party)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🥺",
+      "id": "5458378137240877666",
+      "style": "animated",
+      "description": "Robot with pleading puppy eyes",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😢",
+      "id": "5323329096845897690",
+      "style": "animated",
+      "description": "Robot crying with single tear",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😭",
+      "id": "5339124569221377480",
+      "style": "animated",
+      "description": "Robot crying loudly with tears streaming",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😡",
+      "id": "5217467090826441505",
+      "style": "animated",
+      "description": "Robot angry with red face and steam",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🤯",
+      "id": "5197564405650307134",
+      "style": "animated",
+      "description": "Robot mind blown with exploding head",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🥶",
+      "id": "5197581306346617713",
+      "style": "animated",
+      "description": "Robot freezing cold with ice crystals",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😱",
+      "id": "5197706972794731241",
+      "style": "animated",
+      "description": "Robot screaming in fear",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😨",
+      "id": "5460958179930158488",
+      "style": "animated",
+      "description": "Robot scared with shaking",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🫢",
+      "id": "5197404349399054490",
+      "style": "animated",
+      "description": "Robot covering mouth in surprise (Oops)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🫡",
+      "id": "5323772371830588991",
+      "style": "animated",
+      "description": "Robot saluting respectfully",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🫠",
+      "id": "5197170531379459422",
+      "style": "animated",
+      "description": "Robot melting from heat",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😬",
+      "id": "5352609143033180462",
+      "style": "animated",
+      "description": "Robot grimacing with teeth showing (Awkward)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🥱",
+      "id": "5447445388183222331",
+      "style": "animated",
+      "description": "Robot yawning sleepily",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😴",
+      "id": "5341363621572128687",
+      "style": "animated",
+      "description": "Robot sleeping peacefully with Zzz",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😵",
+      "id": "5422649047334794716",
+      "style": "animated",
+      "description": "Robot dizzy with spiral eyes",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😵‍💫",
+      "id": "5296424506875722458",
+      "style": "animated",
+      "description": "Robot dizzy with swirling stars around head",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🤮",
+      "id": "5384083969048325091",
+      "style": "animated",
+      "description": "Robot feeling sick and nauseous",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🤑",
+      "id": "5436386989857320953",
+      "style": "animated",
+      "description": "Robot with money eyes and dollar signs",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "😈",
+      "id": "5197645099495862838",
+      "style": "animated",
+      "description": "Robot devil with horns smirking",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🤡",
+      "id": "5197188419918246648",
+      "style": "animated",
+      "description": "Robot clown with rainbow wig",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "💩",
+      "id": "5199763841222721243",
+      "style": "animated",
+      "description": "Robot poop emoji with funny face",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "💀",
+      "id": "5375407413555900550",
+      "style": "animated",
+      "description": "Robot skull (Dead/Game Over)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "👍",
+      "id": "5323547156630483403",
+      "style": "animated",
+      "description": "Robot giving thumbs up (Approved)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "👎",
+      "id": "5197396124536682206",
+      "style": "animated",
+      "description": "Robot giving thumbs down (Rejected)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "👌",
+      "id": "5422446685655676792",
+      "style": "animated",
+      "description": "Robot making OK hand sign (Perfect)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "👋",
+      "id": "5199885118214255386",
+      "style": "animated",
+      "description": "Robot waving hello/goodbye",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🙏",
+      "id": "5458774648621643551",
+      "style": "animated",
+      "description": "Robot praying with hands together",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "🙅‍♂️",
+      "id": "5422858869372104873",
+      "style": "animated",
+      "description": "Robot crossing arms saying no (Denied)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "➕",
+      "id": "5433805508353996553",
+      "style": "animated",
+      "description": "Robot holding plus sign (Add/More)",
+      "pack": "RoboEmoji"
+    },
+    {
+      "emoji": "💯",
+      "id": "5447508713181034519",
+      "style": "animated",
+      "description": "Robot with 100 score (Perfect Score)",
+      "pack": "RoboEmoji"
+    }
+  ]
+}

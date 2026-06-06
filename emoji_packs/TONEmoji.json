@@ -1,0 +1,276 @@
+{
+  "name": "TONEmoji",
+  "title": "TON Emoji",
+  "stickers": [
+    {
+      "emoji": "🪙",
+      "id": "5382164415019768638",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🛫",
+      "id": "5463424023734014980",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "💱",
+      "id": "5377336227533969892",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "💰",
+      "id": "5417924076503062111",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🗓️",
+      "id": "5472279086657199080",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🔓",
+      "id": "5429405838345265327",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🛒",
+      "id": "5400090058030075645",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🛒",
+      "id": "5440841102871517055",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🧩",
+      "id": "5213306719215577669",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🔗",
+      "id": "5440410042773824003",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🏆",
+      "id": "5188344996356448758",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "📊",
+      "id": "5203993413346680064",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🐷",
+      "id": "5417831807720642261",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🏦",
+      "id": "5238132025323444613",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🪙",
+      "id": "5296339823005557585",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🏅",
+      "id": "5424746623462823358",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🧲",
+      "id": "5202106638508512484",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "📣",
+      "id": "5298609030321691620",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "💵",
+      "id": "5201873447554145566",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🌱",
+      "id": "5474417568053745249",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🪧",
+      "id": "5429278861932124623",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "📈",
+      "id": "5298614648138919107",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🫴",
+      "id": "5440457429147997980",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🪙",
+      "id": "5296355151743838259",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "⚖️",
+      "id": "5461152608804689572",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "📞",
+      "id": "5213179235996294999",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🚀",
+      "id": "5188481279963715781",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "💳",
+      "id": "5472250091332993630",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🗺",
+      "id": "5235794253149394263",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "💎",
+      "id": "5462902520215002477",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🏷️",
+      "id": "5298877105000439431",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🎯",
+      "id": "5461009483314517035",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "📩",
+      "id": "5472239203590888751",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "💬",
+      "id": "5235570365094188078",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "⛏",
+      "id": "5461047575379466857",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "⛏️",
+      "id": "5204006143629744642",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🎰",
+      "id": "5235989279024373566",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🪂",
+      "id": "5461128651477111908",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🪙",
+      "id": "5381975814415866082",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🧾",
+      "id": "5204242830687494041",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "👛",
+      "id": "5215420556089776398",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🪙",
+      "id": "5298719183347932250",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "⌨️",
+      "id": "5298975240708187753",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🔑",
+      "id": "5307843983102204243",
+      "is_animated": true,
+      "is_video": false
+    },
+    {
+      "emoji": "🔋",
+      "id": "5307905813451397794",
+      "is_animated": true,
+      "is_video": false
+    }
+  ]
+}
