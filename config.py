@@ -2,6 +2,7 @@
 Configuration settings for the Telegram Downloader Bot
 """
 import os
+import shutil
 from dataclasses import dataclass, field
 from typing import List
 
@@ -33,7 +34,7 @@ class BotConfig:
     PRIMARY_OWNER_ID: int = 6213708507  # Set your Telegram ID here
     
     # FFmpeg Settings
-    FFMPEG_PATH: str = "/usr/bin/ffmpeg"  # Updated for Linux (Absolute Path)
+    FFMPEG_PATH: str = field(default_factory=lambda: shutil.which("ffmpeg") or "/usr/bin/ffmpeg")
     VIDEO_BITRATE_STANDARD: str = "800k"
     VIDEO_BITRATE_HD: str = "2000k"
     AUDIO_BITRATE: str = "128k"
