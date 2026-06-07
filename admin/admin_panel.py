@@ -731,7 +731,11 @@ async def manage_cookies_menu(callback: CallbackQuery):
         [build_btn('BACK', callback_data="admin_menu:settings")]
     ])
     
-    await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+    try:
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+    except TelegramBadRequest as e:
+        if "message is not modified" not in str(e).lower():
+            raise
 
 @admin_router.callback_query(F.data == "admin_settings:clear_burned_cookies")
 async def clear_burned_cookies(callback: CallbackQuery):
