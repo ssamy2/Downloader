@@ -203,7 +203,13 @@ def build_btn(key: str, **kwargs) -> InlineKeyboardButton:
     emoji = btn_config.get('emoji', None)
     
     if emoji:
-        kwargs['icon_custom_emoji_id'] = emoji
+        if str(emoji).isdigit():
+            # This is a Custom Emoji ID
+            kwargs['icon_custom_emoji_id'] = str(emoji)
+        else:
+            # This is a standard emoji, prepend it to the text
+            text = f"{emoji} {text}"
+            
     if style:
         kwargs['style'] = style
         
