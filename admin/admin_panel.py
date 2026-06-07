@@ -725,6 +725,8 @@ async def manage_cookies_menu(callback: CallbackQuery):
 
 <b>لإضافة كوكيز جديدة:</b>
 فقط أرسل الملف النصي <code>.txt</code> إلى البوت مباشرة وسيقوم بفحصه وإضافته لدورة الكوكيز.
+
+<i>⏰ آخر تحديث: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</i>
 """
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🗑 مسح الكوكيز المحروقة", callback_data="admin_settings:clear_burned_cookies")],
