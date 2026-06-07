@@ -33,7 +33,7 @@ class BotConfig:
     PRIMARY_OWNER_ID: int = 6213708507  # Set your Telegram ID here
     
     # FFmpeg Settings
-    FFMPEG_PATH: str = r"C:\Users\Sami\Desktop\Downloader\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe"  # Will be auto-updated by setup script
+    FFMPEG_PATH: str = "ffmpeg"  # Updated for Linux
     VIDEO_BITRATE_STANDARD: str = "800k"
     VIDEO_BITRATE_HD: str = "2000k"
     AUDIO_BITRATE: str = "128k"
