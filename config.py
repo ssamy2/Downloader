@@ -199,10 +199,12 @@ def build_btn(key: str, **kwargs) -> InlineKeyboardButton:
     configs = UI_SETTINGS.get('button_configs', {})
     btn_config = configs.get(key, {})
     text = btn_config.get('text', UI_SETTINGS.get('buttons_dict', {}).get(key, key))
+    style = btn_config.get('style', 'primary')
+    emoji = btn_config.get('emoji', None)
     
-    # Telegram InlineKeyboardButton does NOT support custom emojis or styles.
-    # We must only pass valid Telegram Bot API arguments.
-    # If the user put a custom emoji ID, we just ignore it for inline buttons,
-    # or if it's a normal emoji, they should put it in the text itself.
-    
+    if emoji:
+        kwargs['icon_custom_emoji_id'] = emoji
+    if style:
+        kwargs['style'] = style
+        
     return InlineKeyboardButton(text=text, **kwargs)
