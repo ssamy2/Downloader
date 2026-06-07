@@ -779,16 +779,37 @@ async def handle_admin_document(message: Message, bot: Bot):
             temp_path = os.path.join(cookies_dir, f"temp_{document.file_id}.txt")
             await bot.download(document, destination=temp_path)
             
-            # Check if it's a cookie file
             is_cookie = False
+            is_raw_string = False
+            
             with open(temp_path, 'r', encoding='utf-8', errors='ignore') as f:
-                first_lines = "".join([f.readline() for _ in range(5)])
-                if 'Cookie File' in first_lines or '# Netscape' in first_lines or '.instagram.com' in first_lines:
+                content = f.read(2048)
+                
+                # Check for Netscape format
+                if 'Cookie File' in content or '# Netscape' in content or '.instagram.com\t' in content:
                     is_cookie = True
+                # Check for raw string format (like: sessionid=...; csrftoken=...;)
+                elif 'sessionid=' in content and 'csrftoken=' in content:
+                    is_cookie = True
+                    is_raw_string = True
             
             if not is_cookie:
                 os.remove(temp_path)
+                await message.answer("❌ <b>ملف غير مدعوم!</b>\n\nعذراً، هذا الملف لا يبدو كملف كوكيز صالح. تأكد أن الملف بصيغة Netscape HTTP Cookie File أو يحتوي على كوكيز إنستجرام الخام (sessionid=...).", parse_mode="HTML")
                 return  # Not a cookie file, ignore
+                
+            # If it's a raw string, convert it to Netscape format
+            if is_raw_string:
+                raw_cookies = content.strip().split(';')
+                netscape_content = "# Netscape HTTP Cookie File\n# This file was auto-generated from raw string\n\n"
+                for rc in raw_cookies:
+                    if '=' in rc:
+                        k, v = rc.strip().split('=', 1)
+                        # domain  include_subdomains  path  secure  expiry  name  value
+                        netscape_content += f".instagram.com\tTRUE\t/\tTRUE\t0\t{k}\t{v}\n"
+                
+                with open(temp_path, 'w', encoding='utf-8') as f:
+                    f.write(netscape_content)
                 
             # It's a cookie file, save it properly
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
