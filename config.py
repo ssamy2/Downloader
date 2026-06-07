@@ -31,7 +31,7 @@ class BotConfig:
     REQUIRED_CHANNELS: List[str] = field(default_factory=lambda: [])
     
     # Admin Settings
-    PRIMARY_OWNER_ID: int = 6213703507  # Set your Telegram ID here
+    PRIMARY_OWNER_ID: int = 6213708507  # Set your Telegram ID here
     
     # FFmpeg Settings
     FFMPEG_PATH: str = field(default_factory=lambda: shutil.which("ffmpeg") or "/usr/bin/ffmpeg")
