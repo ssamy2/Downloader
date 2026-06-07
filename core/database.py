@@ -74,10 +74,6 @@ class Database:
                 )
             """)
             
-            # Auto-migrate: add permission columns if they don't exist
-            await self._auto_migrate_permissions()
-            await self._auto_migrate_channels()
-            
             # Downloads log table
             await self._connection.execute("""
                 CREATE TABLE IF NOT EXISTS downloads (
@@ -113,9 +109,14 @@ class Database:
                     is_valid INTEGER DEFAULT 1,
                     added_by INTEGER,
                     added_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    last_checked TEXT
+                    last_checked TEXT,
+                    invite_link TEXT
                 )
             """)
+            
+            # Auto-migrate: add columns if they don't exist (for existing old databases)
+            await self._auto_migrate_permissions()
+            await self._auto_migrate_channels()
             
             # Error logs table
             await self._connection.execute("""
