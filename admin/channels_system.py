@@ -300,7 +300,7 @@ async def delete_channel_menu(callback: CallbackQuery):
         text += f"{i}. {ch['title'] or ch.get('username') or 'قناة خاصة'}\n"
         buttons.append([
             InlineKeyboardButton(
-                text=f"❌ {ch['title'] or ch.get('username', style="primary") or 'قناة خاصة'}",
+                text=f"❌ {ch['title'] or ch.get('username') or 'قناة خاصة'}",
                 callback_data=f"channels:delete:{ch['channel_id']}"
             )
         ])
@@ -346,7 +346,7 @@ async def delete_channel(callback: CallbackQuery):
                     text += f"{i}. {ch['title'] or ch.get('username') or 'قناة خاصة'}\n"
                     buttons.append([
                         InlineKeyboardButton(
-                            text=f"❌ {ch['title'] or ch.get('username', style="primary") or 'قناة خاصة'}",
+                            text=f"❌ {ch['title'] or ch.get('username') or 'قناة خاصة'}",
                             callback_data=f"channels:delete:{ch['channel_id']}"
                         )
                     ])
