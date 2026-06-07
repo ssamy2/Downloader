@@ -542,7 +542,7 @@ class Database:
         """Get channel info by ID"""
         async with self._lock:
             cursor = await self._connection.execute(
-                "SELECT channel_username, channel_id, channel_title, is_private, is_valid FROM required_channels WHERE channel_id = ?",
+                "SELECT channel_username, channel_id, channel_title, is_private, is_valid, invite_link FROM required_channels WHERE channel_id = ?",
                 (channel_id,)
             )
             row = await cursor.fetchone()
@@ -552,7 +552,8 @@ class Database:
                     'channel_id': row[1],
                     'title': row[2],
                     'is_private': bool(row[3]),
-                    'is_valid': bool(row[4])
+                    'is_valid': bool(row[4]),
+                    'invite_link': row[5]
                 }
             return None
     
